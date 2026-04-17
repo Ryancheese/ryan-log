@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ryan Log
 
-## Getting Started
+一个极简技术风的个人博客模板，基于 `Next.js + TypeScript + Tailwind + MDX`。
 
-First, run the development server:
+## 本地开发
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+默认地址：`http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 内容写作
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 文章目录：`src/content/posts/*.mdx`
+- Frontmatter 字段：
+  - `title`
+  - `date`
+  - `summary`
+  - `tags`
+  - `cover`
+  - `draft`
 
-## Learn More
+## SEO 与输出
 
-To learn more about Next.js, take a look at the following resources:
+- 文章页动态 metadata
+- 自动生成 `sitemap.xml`
+- 自动生成 `robots.txt`
+- 自动生成 `rss.xml`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 统计（可选）
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+支持 Plausible，创建 `.env.local`：
 
-## Deploy on Vercel
+```bash
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_PLAUSIBLE_DOMAIN=your-domain.com
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 部署到 Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. 将项目推送到 GitHub 仓库。  
+2. 登录 [Vercel](https://vercel.com)，导入该仓库。  
+3. 在 Vercel 项目中配置环境变量（与 `.env.example` 一致）。  
+4. 绑定自定义域名并启用 HTTPS。  
+5. 每次 `git push` 后自动触发部署。

@@ -1,0 +1,15 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#09090B"/>
+  <circle cx="1020" cy="120" r="220" fill="#0EA5E9" fill-opacity="0.12"/>
+  <circle cx="190" cy="540" r="180" fill="#0EA5E9" fill-opacity="0.1"/>
+  <rect x="92" y="92" width="1016" height="446" rx="24" stroke="#27272A" stroke-width="2"/>
+  <text x="150" y="250" fill="#E4E4E7" font-size="68" font-family="Arial, sans-serif" font-weight="700">
+    Ryan Log
+  </text>
+  <text x="150" y="328" fill="#A1A1AA" font-size="36" font-family="Arial, sans-serif">
+    €€/Z¢ · Frontend Engineering Notes
+  </text>
+  <text x="150" y="462" fill="#38BDF8" font-size="28" font-family="Arial, sans-serif">
+    ryan-log.vercel.app
+  </text>
+</svg>

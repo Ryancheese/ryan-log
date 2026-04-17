@@ -1,0 +1,22 @@
+---
+title: "TypeScript 在中大型项目里的 3 个关键用法"
+date: "2026-04-08"
+summary: "从类型约束到可维护性，分享我最常用的 TS 模式。"
+tags: ["TypeScript", "前端", "开发效率"]
+cover: "/og-image.svg"
+draft: false
+---
+
+TypeScript 的价值不在“写类型”，而在“降低理解成本和维护成本”。
+
+## 用 discriminated union 管理状态
+
+它能让状态机逻辑更直观，并且在编译阶段发现遗漏分支。
+
+## 用 utility types 减少重复
+
+常见组合包括 `Pick`、`Omit`、`Partial` 和 `Record`。
+
+## 让类型贴近业务语义
+
+类型命名要有业务含义，而不是机械命名。
