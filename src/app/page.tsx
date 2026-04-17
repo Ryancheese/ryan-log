@@ -9,7 +9,7 @@ export default function Home() {
     <div className="container-page py-16 md:py-24">
       <section className="fade-up rounded-3xl border border-zinc-800 bg-zinc-900/50 px-8 py-14 md:px-12">
         <p className="mb-4 text-xs uppercase tracking-[0.22em] text-zinc-500">
-          Frontend Engineer · Builder
+          资深前端工程师 · 创作者
         </p>
         <h1 className="max-w-3xl text-3xl font-bold leading-tight text-zinc-100 md:text-5xl">
           用极简方式记录技术成长，
@@ -19,6 +19,13 @@ export default function Home() {
           这里是我的个人博客，聚焦 Next.js、TypeScript、工程化与产品实践。
           我会持续分享可以直接应用到项目中的方案与思考。
         </p>
+        <p className="mt-4 max-w-2xl text-sm text-zinc-500">
+          个人介绍与联系方式请点顶部头像旁的
+          <Link href="/profile" className="mx-1 text-sky-400 underline-offset-4 hover:underline">
+            个人信息
+          </Link>
+          查看。
+        </p>
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
             href="/blog"
@@ -27,7 +34,7 @@ export default function Home() {
             阅读最新文章
           </Link>
           <a
-            href="mailto:ryan@example.com"
+            href="mailto:17625416243@163.com"
             className="rounded-full border border-zinc-700 px-6 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500"
           >
             联系我

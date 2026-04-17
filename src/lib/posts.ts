@@ -5,6 +5,12 @@ import readingTime from "reading-time";
 
 const postsDirectory = path.join(process.cwd(), "src/content/posts");
 
+function formatReadingTimeCn(content: string): string {
+  const result = readingTime(content, { wordsPerMinute: 350 });
+  const minutes = Math.max(1, Math.ceil(result.minutes));
+  return `约 ${minutes} 分钟阅读`;
+}
+
 type PostFrontmatter = {
   title: string;
   date: string;
@@ -12,6 +18,8 @@ type PostFrontmatter = {
   tags: string[];
   cover?: string;
   draft?: boolean;
+  /** 自定义网址路径（仅小写英文/数字/连字符推荐），缺省则用文件名（不含 .mdx） */
+  slug?: string;
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -32,6 +40,12 @@ function normalizeDate(date: string) {
   }).format(new Date(date));
 }
 
+function canonicalSlugFromFile(filename: string, fm: PostFrontmatter): string {
+  const stem = filename.replace(/\.mdx$/i, "").normalize("NFC");
+  const fromFm = fm.slug?.trim().normalize("NFC");
+  return (fromFm && fromFm.length > 0 ? fromFm : stem).normalize("NFC");
+}
+
 export function getAllPosts() {
   if (!fs.existsSync(postsDirectory)) {
     return [];
@@ -43,16 +57,16 @@ export function getAllPosts() {
 
   const posts = filenames
     .map((filename) => {
-      const slug = filename.replace(/\.mdx$/, "");
       const fullPath = path.join(postsDirectory, filename);
       const raw = fs.readFileSync(fullPath, "utf8");
       const { data, content } = matter(raw);
       const frontmatter = data as PostFrontmatter;
+      const slug = canonicalSlugFromFile(filename, frontmatter);
 
       return {
         ...frontmatter,
         slug,
-        readingTime: readingTime(content).text,
+        readingTime: formatReadingTimeCn(content),
         dateText: normalizeDate(frontmatter.date),
       };
     })
@@ -64,21 +78,56 @@ export function getAllPosts() {
   return posts;
 }
 
+function safeDecodeURIComponent(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 export function getPostBySlug(slug: string): PostData | null {
-  const fullPath = path.join(postsDirectory, `${slug}.mdx`);
-  if (!fs.existsSync(fullPath)) {
-    return null;
+  const key = safeDecodeURIComponent(slug).normalize("NFC");
+
+  const tryPath = path.join(postsDirectory, `${key}.mdx`);
+  if (fs.existsSync(tryPath)) {
+    const raw = fs.readFileSync(tryPath, "utf8");
+    const { data, content } = matter(raw);
+    const frontmatter = data as PostFrontmatter;
+    const canonical = canonicalSlugFromFile(path.basename(tryPath), frontmatter);
+    return {
+      ...frontmatter,
+      slug: canonical,
+      content,
+      readingTime: formatReadingTimeCn(content),
+      dateText: normalizeDate(frontmatter.date),
+    };
   }
 
-  const raw = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(raw);
-  const frontmatter = data as PostFrontmatter;
+  for (const filename of filenamesEndingInMdx()) {
+    const fullPath = path.join(postsDirectory, filename);
+    const raw = fs.readFileSync(fullPath, "utf8");
+    const { data, content } = matter(raw);
+    const frontmatter = data as PostFrontmatter;
+    const canonical = canonicalSlugFromFile(filename, frontmatter);
+    const stem = filename.replace(/\.mdx$/i, "").normalize("NFC");
+    if (canonical === key || stem === key) {
+      return {
+        ...frontmatter,
+        slug: canonical,
+        content,
+        readingTime: formatReadingTimeCn(content),
+        dateText: normalizeDate(frontmatter.date),
+      };
+    }
+  }
 
-  return {
-    ...frontmatter,
-    slug,
-    content,
-    readingTime: readingTime(content).text,
-    dateText: normalizeDate(frontmatter.date),
-  };
+  return null;
+}
+
+function filenamesEndingInMdx(): string[] {
+  if (!fs.existsSync(postsDirectory)) {
+    return [];
+  }
+  return fs.readdirSync(postsDirectory).filter((name) => name.endsWith(".mdx"));
 }

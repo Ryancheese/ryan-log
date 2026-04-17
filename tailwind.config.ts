@@ -8,7 +8,12 @@ const config: Config = {
     "./src/content/**/*.{md,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };

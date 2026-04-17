@@ -1,0 +1,603 @@
+---
+title: "AI通用规则与技能"
+date: "2026-04-17"
+summary: "整理个人在 AI 辅助编程时的通用规则、项目约定与前端技能说明，便于在 Cursor 等工具中复用。"
+tags: ["AI", "通用规则", "技能"]
+cover: "/og-image.svg"
+draft: false
+---
+
+> 本文汇总 **个人规则**、**项目约定（zfsoft admin-web）** 与 **通用技能（前端设计 / 代码生成）**，可直接复制到团队文档或 AI 规则配置中使用。
+
+## 一、个人规则
+
+### 通用编码
+
+- 所有回答都使用中文表述。
+- 生成代码时添加函数级别的中文注释。
+
+### 代码可读性
+
+- 遵循项目或语言的命名规范。
+- 使用有意义的、描述性的名称。
+- 避免缩写和单字母变量。
+- 避免多层嵌套，请提前返回。
+
+### 性能优化
+
+- 避免不必要的对象创建。
+- 及时释放不再需要的资源。
+- 注意内存泄漏和线程安全问题。
+- 使用适当的数据结构和算法。
+
+## 二、项目规则
+
+适用于日常业务开发；若在 Cursor 等工具中配置规则，可使用下列元数据：
+
+```yaml
+alwaysApply: false
+description: 编写代码时，需要遵守以下规范
+```
+
+### 项目概览
+
+#### 项目做什么
+
+产品/服务的核心功能描述。
+
+#### 技术栈与关键约定
+
+- 前端：Vue3、ElementPlus、Vite、Axios
+- 后端：Java17、SpringBoot3.5、MySQL8、MybatisPlus、Hutools、Fastjson2
+- 包管理：前端pnpm；后端maven
+- 代码规范/工具：前端 eslint / prettier；后端 checkstyle
+
+#### 目录速览
+
+- `admin-web-ui/**`：前端应用入口
+- `admin-web/**`：后端服务入口
+- `docs/**`：文档入口
+
+#### 开发规范
+
+- 所有 Java 类的包名均以 `com.zfsoft.adminweb` 开头
+- 接口响应内容统一使用`com.zfsoft.common.base.Result`
+- 如涉及数据库表，请将脚本放在`src/main/resources/migrations`
+- 每个类都需要添加注释，模板如下：
+
+```java
+/**
+* @description 类描述
+* @author zfsoft
+* @date 日期格式yyyy-MM-dd HH:mm:ss
+*/
+```
+- 实体类字段、Service 接口方法、Controller 方法均需添加中文注释
+- 使用 JUnit 5 编写测试用例，覆盖各 Service 方法的主要行为。
+
+## 三、通用技能
+
+### 3.1 前端设计（`frontend-design`）
+
+**适用场景**：原型设计、页面样式与视觉优化。
+
+**技能元数据**：
+
+```yaml
+name: frontend-design
+description: 创建独具特色、具备专业生产水准且设计质量上乘的前端界面。当用户要求构建网页组件、页面、海报或应用程序（例如网站、登录页面、仪表盘、React 组件、HTML/CSS 布局，或者对任何网页用户界面进行样式美化/美化处理）时，请使用此技能。该技能能够生成富有创意、精致的代码和用户界面设计，避免采用通用的 AI 设计风格。
+```
+
+这项技能用于产出**有特色、可上线**的前端界面，避免常见的「AI 粗糙感」。应对美学细节与创意选择保持高标准，并输出可落地的代码。
+
+**输入说明**：用户会描述要构建的组件、页面或应用，以及用途、受众、技术限制等。
+
+#### 设计思维
+
+在开始编码之前，先要理解整体背景，并确定一个鲜明的视觉风格方向：
+- 目的：这个界面旨在解决什么问题？谁会使用它？
+- 风格：选择一种极端的风格：极度简约、极繁混乱、复古未来主义、有机/自然、奢华/精致、趣味性/玩具感、编辑/杂志风格、粗犷/原始、艺术装饰风格/几何、柔和/淡色、工业/实用主义等等。有如此多的风格可供选择。利用这些作为灵感来源，但要设计出符合该视觉风格方向的作品。
+- 限制条件：技术要求（框架、性能、可访问性）。
+- 差异化：是什么让这个界面令人难忘？是什么会让某人记住它？
+
+**关键提示**：先确立清晰的概念方向，再精准落地。极致繁复与极简都可以，关键是**意图明确**，而非一味堆效果。
+
+随后实现可运行代码（HTML/CSS/JS、React、Vue 等），并满足：
+- 具有生产级的稳定性和功能性
+- 视觉上引人注目且令人难忘
+- 与明确的美学观点保持一致
+- 在每一个细节上都经过精心打磨
+
+#### 前端美学指南
+
+- 字体设计：选择美观、独特且引人注目的字体。避免使用像 Arial 和 Inter 这样的普通字体；相反，应选择具有独特性的选择，以提升前端的美感；采用出人意料、富有个性的字体选择。将独特的显示字体与精致的正文字体搭配使用。
+- 色彩与主题：坚持一致的风格。使用 CSS 变量以保持一致性。具有鲜明对比的主色调搭配强烈的强调效果，比平淡、均匀分布的配色方案更出色。
+- 动态效果：使用动画来实现效果和微交互。优先使用纯 CSS 解决方案来处理 HTML。在可用的情况下，使用 Motion 库来处理 React。专注于高影响力时刻：一次精心编排的页面加载，通过交错展示（动画延迟）营造出更多的愉悦感，比零散的微交互效果更好。使用滚动触发和会触发悬停状态的元素来制造惊喜。
+- 空间布局：出人意料的布局。不对称性。重叠。对角线流动。打破网格的元素。充裕的负空间或可控的密度。
+- 背景与视觉细节：营造氛围和深度，而非默认使用纯色。添加与整体美学相匹配的背景效果和纹理。应用诸如渐变网格、噪波纹理、几何图案、分层透明度、强烈阴影、装饰边框、自定义指针以及纹理叠加等富有创意的元素。
+
+> **避免**：滥用 Inter、Roboto、Arial 等「万能字体」；白底紫渐变等陈旧配色；千篇一律的组件骨架；与场景无关的套模板设计。  
+> 鼓励针对具体场景做非常规但合理的取舍；同一站点内也应在字体、色板、气质上保持**有意识的**变化，而不是所有页面同一种「太空粗体」套路。
+
+**重要提示**：实现复杂度要与美学目标匹配——极繁需要更丰富的动画与层次；极简则依赖留白、字号与微细节的精确控制。
+
+### 3.2 前端代码生成（`frontend-codegen`）
+
+**适用场景**：常见 Vue 3 项目中的 CRUD 页面脚手架。
+
+**技能元数据**：
+
+```yaml
+name: frontend-codegen
+description: 前端代码生成
+```
+
+本工具用于快速生成前端 CRUD，一般包含：
+
+1. **API 接口文件**：与后端交互。
+2. **页面组件**：列表、分页、搜索、增删改、启禁用、导出等。
+
+#### 技术栈
+- 核心：Vue3/Vue Router
+- UI框架：Element Plus/Remixicon/TailwindCSS
+- 工具：Axios / Vite 7
+
+#### 开发流程
+- 分析需求和接口文档
+- 生成API接口代码
+- 生成页面组件代码
+- 配置路由
+- 编写 Playwright 测试脚本
+
+#### 开发规范
+- 前端代码位于`frontend`目录下
+- 页面组件命名采用小写，如`index.vue`/`list.vue`
+- 变量和函数命名采用小驼峰命名法，如`getUserList`
+- 常量命名采用全大写加下划线，如`API_BASE_URL`
+- 每个文件都需要添加注释，模板如下：
+
+  ```html
+  <!--
+  @description 文件描述
+  @author zfsoft
+  @date 日期格式 yyyy-MM-dd HH:mm
+  -->
+  ```
+
+#### 生成文件结构
+```text
+src/
+├── api/              # API 接口定义目录
+│   └── example.js    # 模块 API
+└── views/            # 页面组件目录
+    └── example/      # 模块目录
+        └── index.vue # 页面组件
+```
+
+#### API 接口定义
+
+文件路径：`src/api/example.js`
+ 
+```javascript
+import request from '@/utils/request'
+ 
+/**
+ * 获取示例分页列表
+ * @param {Object} params 查询参数
+ * @returns {Promise} 请求结果
+ */
+export function getExampleList(params) {
+  return request({
+    url: '/web/sys/example/page',
+    method: 'get',
+    params
+  })
+}
+ 
+/**
+ * 获取示例详情
+ * @param {String} oid 主键ID
+ * @returns {Promise} 请求结果
+ */
+export function getExampleDetail(oid) {
+  return request({
+    url: '/web/sys/example/view',
+    method: 'get',
+    params: { oid }
+  })
+}
+ 
+/**
+ * 保存示例
+ * @param {Object} data 示例数据
+ * @returns {Promise} 请求结果
+ */
+export function saveExample(data) {
+  return request({
+    url: '/web/sys/example/save',
+    method: 'post',
+    data
+  })
+}
+ 
+/**
+ * 删除示例
+ * @param {String} oid 主键ID
+ * @returns {Promise} 请求结果
+ */
+export function deleteExample(oid) {
+  return request({
+    url: '/web/sys/example/delete',
+    method: 'post',
+    params: { oid }
+  })
+}
+ 
+/**
+ * 启用/禁用示例
+ * @param {String} oid 主键ID
+ * @returns {Promise} 请求结果
+ */
+export function ableExample(oid) {
+  return request({
+    url: '/web/sys/example/able',
+    method: 'post',
+    params: { oid }
+  })
+}
+```
+
+#### 页面组件
+
+文件路径：`src/views/example/index.vue`
+
+以下为固定模板：**请勿随意改动布局、样式与对外方法名**。
+
+```vue
+<template>
+  <div class="app-container">
+    <!-- 搜索区 -->
+    <el-form :model="queryParams" ref="queryRef" v-show="showSearch" :inline="true" class="search-form">
+      <div class="search-form-left">
+        <!-- todo 根据需求生成搜索条件 -->
+        <el-form-item label="搜索条件1" prop="field1">
+          <el-input
+            v-model="queryParams.field1"
+            placeholder="请输入搜索条件1"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="搜索条件2" prop="field2">
+          <el-input
+            v-model="queryParams.field2"
+            placeholder="请输入搜索条件2"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+      </div>
+      <div>
+        <el-button icon="Search" type="primary" @click="handleQuery">搜索</el-button>
+        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+      </div>
+    </el-form>
+ 
+    <!-- 操作按钮栏 -->
+    <el-row :gutter="10" class="mb10">
+      <el-col :span="1.5">
+        <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['sys:example:save']">新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="danger" icon="Delete" :disabled="multiple" @click="handleDelete" v-hasPermi="['sys:example:delete']">删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="warning" icon="Download" @click="handleExport" v-hasPermi="['sys:example:listExp']">导出</el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
+ 
+    <!-- 表格数据 -->
+    <el-table v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55"/>
+      <el-table-column type="index" label="序号" width="60"></el-table-column>
+      <!-- todo 根据需求生成表格字段 -->
+      <el-table-column label="列名1" prop="field1"/>
+      <el-table-column label="列名2" prop="field2"/>
+      <!-- todo 若包含状态isAble字段，添加状态操作列 -->
+      <el-table-column label="状态" width="100">
+        <template #default="scope">
+          <el-switch
+            v-model="scope.row.isAble"
+            active-value="Y"
+            inactive-value="N"
+            :disabled="!auth.hasPermi('sys:example:able')"
+            @change="handleAble(scope.row)"
+          ></el-switch>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-tooltip content="编辑" placement="top">
+            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['sys:example:update']"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top">
+            <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['sys:example:delete']"></el-button>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 分页 -->
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNumber"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+ 
+    <!-- 新增/编辑对话框 -->
+    <el-dialog :title="title" v-model="dialogVisible" width="550px" append-to-body draggable>
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="auto">
+        <!-- todo 根据需求添加其他表单字段 -->
+        <el-form-item label="字段1" prop="field1">
+          <el-input v-model="form.field1" placeholder="请输入字段1" show-word-limit maxlength="100"></el-input>
+        </el-form-item>
+        <el-form-item label="字段2" prop="field2">
+          <el-input v-model="form.field2" placeholder="请输入字段2" show-word-limit maxlength="100"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="cancel">取消</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+ 
+<script setup>
+import { getCurrentInstance, ref, reactive, onMounted, toRefs } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import * as api from '@/api/example'
+import auth from '@/plugins/auth'
+ 
+const {proxy} = getCurrentInstance()
+const tableList = ref([])
+const dialogVisible = ref(false)
+const loading = ref(true)
+const showSearch = ref(true)
+const total = ref(0)
+const title = ref('')
+const ids = ref([])
+const single = ref(true)
+const multiple = ref(true)
+ 
+const data = reactive({
+  form: {
+    field1: '',
+    field2: '',
+  },
+  queryParams: {
+    pageNumber: 1,
+    pageSize: 10,
+    field1: '',
+    field2: '',
+    // todo 根据需求添加其他搜索条件
+  },
+  rules: {
+    field1: [{required: true, message: '不能为空'}],
+    field2: [{required: true, message: '不能为空'}],
+    // todo 根据需求添加其他表单字段的校验规则
+  }
+})
+const {queryParams, form, rules} = toRefs(data)
+ 
+/**
+ * 获取数据列表
+ */
+const getList = async () => {
+  loading.value = true
+  const response = await api.getExampleList(queryParams.value)
+  if (response.success) {
+    tableList.value = response.data.records
+    total.value = response.data.total
+  } else {
+    ElMessage.error(response.message)
+  }
+  loading.value = false
+}
+ 
+/**
+ * 搜索
+ */
+const handleQuery = () => {
+  queryParams.value.pageNumber = 1
+  getList()
+}
+ 
+/**
+ * 重置搜索
+ */
+const resetQuery = () => {
+  proxy.$refs.queryRef.resetFields()
+  handleQuery()
+}
+ 
+/**
+ * 重置表单
+ */
+const resetForm = () => {
+  proxy.$refs.formRef.resetFields()
+}
+ 
+/**
+ * 弹窗取消
+ */
+const cancel = () => {
+  dialogVisible.value = false
+  resetForm()
+}
+ 
+/** 
+ * 多选
+ */
+const handleSelectionChange = selection => {
+  ids.value = selection.map(item => item.oid)
+  single.value = selection.length !== 1
+  multiple.value = !selection.length
+}
+ 
+/**
+ * 新增
+ */
+const handleAdd = () => {
+  resetForm()
+  dialogVisible.value = true
+  title.value = '新增'
+}
+ 
+/**
+ * 编辑
+ * @param {Object} row 选中行数据
+ */
+const handleUpdate = async (row) => {
+  resetForm()
+  const response = await api.getExampleDetail(row.oid)
+  if (response.success) {
+    dialogVisible.value = true
+    title.value = '编辑'
+    Object.assign(form.value, response.data)
+  } else {
+    ElMessage.error(response.message)
+  }
+}
+ 
+/**
+ * 提交
+ */
+const submitForm = async () => {
+  await proxy.$refs.formRef.validate(async (valid) => {
+    if (valid) {
+      const response = await api.saveExample(form.value)
+      if (response.success) {
+        dialogVisible.value = false
+        getList()
+        ElMessage.success(response.message)
+      } else {
+        ElMessage.error(response.message)
+      }
+    }
+  })
+}
+ 
+/**
+ * 启禁用
+ * @param {Object} row 选中行数据
+ */
+const handleAble = async (row) => {
+  await ElMessageBox.confirm(`确定要${row.isAble === 'Y' ? '禁用' : '启用'}这条数据吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
+  const response = await api.ableExample(row.oid)
+  if (response.success) {
+    getList()
+    ElMessage.success(response.message)
+  } else {
+    ElMessage.error(response.message)
+  }
+}
+ 
+/**
+ * (批量)删除
+ * @param {Object} row 选中行数据
+ */
+const handleDelete = async (row) => {
+  const delIds = row.oid || ids.value.join(',')
+  await ElMessageBox.confirm('确定要删除这条数据吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'danger'
+  })
+  const response = await api.deleteExample(delIds)
+  if (response.success) {
+    getList()
+    ElMessage.success(response.message)
+  } else {
+    ElMessage.error(response.message)
+  }
+}
+ 
+/**
+ * 导出
+ */
+const handleExport = () => {
+  const fileName = '示例_' + new Date().getTime() +'.xlsx'
+  proxy.download('/web/sys/example/export', {...queryParams.value}, fileName)
+}
+ 
+// 初始化
+onMounted(() => {
+  getList()
+})
+</script>
+ 
+<style scoped>
+</style>
+```
+ 
+#### 组件使用
+
+根据具体模块的字段，需修改以下几处，特别留意 `todo` 项：
+- 搜索表单字段
+- 表格列字段
+- 表单字段
+- 表单验证规则
+ 
+搜索和表单区组件映射如下表：
+ 
+| 字段类型 | 组件 | 解释 |
+| -------- | ---- | ---- |
+| string | el-input | 文本输入框，支持password/textarea类型 |
+| number | el-input-number | 数字输入框 |
+| date | el-date-picker | 日期选择器，格式YYYY-MM-DD |
+| time | el-time-picker | 时间选择器，格式HH:mm:ss |
+| select | el-select | 下拉选择框，若使用字典，请调用`getDict`方法 |
+| radio | el-radio-group | 单选组 |
+| checkbox | el-checkbox-group | 复选框组 |
+| switch | el-switch | 开关组件，用在启禁用/上下架等场景 |
+| icon | el-popover + icon-select | 图标选择器，用于选择remixicon图标 |
+| upload | el-upload | 文件上传组件，支持单文件/多文件上传 |
+| cascader | el-cascader | 级联选择器 |
+| editor | quill-editor | 富文本编辑器 |
+ 
+#### 配置路由
+
+在 `src/router/index.js` 中添加路由配置：
+```javascript
+{
+  path: '/example',
+  name: 'Example',
+  component: () => import('@/views/example/index')
+}
+```
+ 
+#### Playwright 测试
+
+在 `frontend/tests` 目录下创建 `example.spec.js`，编写测试脚本：
+```javascript
+import { test, expect } from '@playwright/test'
+ 
+test.describe('XX管理集成测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/example')
+  })
+ 
+  test('新增示例', async ({ page }) => {
+    await page.getByRole('button', { name: '新增' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+  })
+})
+```
+ 

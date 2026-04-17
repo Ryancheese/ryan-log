@@ -20,9 +20,9 @@ export async function GET() {
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
   <rss version="2.0">
     <channel>
-      <title>Ryan Log</title>
+      <title>Ryan Log｜极简技术博客</title>
       <link>${baseUrl}</link>
-      <description>Ryan 的极简技术博客</description>
+      <description>记录前端工程、产品思考与技术实践的极简技术博客。</description>
       <language>zh-cn</language>
       ${rssItems}
     </channel>
