@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# jetbrains / intellij
+.idea/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
