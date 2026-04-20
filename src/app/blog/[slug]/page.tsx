@@ -69,7 +69,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ← 返回文章列表
       </Link>
       <article className="mt-6 grid gap-12 lg:grid-cols-[1fr_220px]">
-        <div>
+        <div className="min-w-0 w-full max-w-prose">
           <header className="border-b border-zinc-800 pb-8">
             <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
               {post.dateText} · {post.readingTime}
@@ -77,7 +77,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <h1 className="mt-4 text-3xl font-bold leading-tight text-zinc-100 md:text-4xl">
               {post.title}
             </h1>
-            <p className="mt-4 max-w-3xl text-zinc-400">{post.summary}</p>
+            <p className="mt-4 text-zinc-400">{post.summary}</p>
           </header>
           <div className="prose-blog mt-10">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>

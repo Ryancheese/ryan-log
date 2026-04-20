@@ -18,10 +18,12 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
   background: radial-gradient(circle at top, #141414 0%, #0a0a0a 45%);
   color: var(--foreground);
 }
@@ -35,7 +37,9 @@ a {
 }
 
 .prose-blog {
-  @apply max-w-none text-zinc-300;
+  @apply w-full max-w-full text-zinc-300;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .prose-blog h2,
@@ -56,7 +60,15 @@ a {
 }
 
 .prose-blog pre {
-  @apply overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4;
+  @apply max-w-full overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4;
+}
+
+.prose-blog img {
+  @apply h-auto max-w-full;
+}
+
+.prose-blog table {
+  @apply block max-w-full overflow-x-auto;
 }
 
 .prose-blog pre code {
