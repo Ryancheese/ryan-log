@@ -37,6 +37,24 @@ slug: "cursor-apifox-mcp"
 - 填入服务地址与鉴权信息（Token/Key）；
 - 完成连接后，先执行一次“列出接口分组”验证可用性。
 
+可直接参考下面这份最小可用配置（将项目 id 与 token 替换成你的实际值）：
+
+```json
+{
+  "mcpServers": {
+    "API 文档": {
+      "command": "npx",
+      "args": ["-y", "apifox-mcp-server@latest", "--project=你的项目 id"],
+      "env": {
+        "APIFOX_ACCESS_TOKEN": "你的 token"
+      }
+    }
+  }
+}
+```
+
+建议把 `APIFOX_ACCESS_TOKEN` 放到本机环境变量或密钥管理工具中，不要把真实 token 提交到仓库。
+
 > 建议：把 MCP 配置纳入团队文档，统一配置模板，减少个人环境差异导致的问题。
 
 ### 2）验证接口可检索性
