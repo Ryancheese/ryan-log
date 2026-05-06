@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
+import type { Locale } from "@/i18n/config";
+import { translateText } from "@/lib/translate";
 
 const postsDirectory = path.join(process.cwd(), "src/content/posts");
 
@@ -30,6 +32,17 @@ export type PostMeta = PostFrontmatter & {
 
 export type PostData = PostMeta & {
   content: string;
+};
+
+export type LocalizedPostMeta = PostMeta & {
+  localizedTitle: string;
+  localizedSummary: string;
+};
+
+export type LocalizedPostData = PostData & {
+  localizedTitle: string;
+  localizedSummary: string;
+  localizedContent: string;
 };
 
 function normalizeDate(date: string) {
@@ -78,6 +91,21 @@ export function getAllPosts() {
   return posts;
 }
 
+export async function getAllLocalizedPosts(locale: Locale): Promise<LocalizedPostMeta[]> {
+  const posts = getAllPosts();
+  const localized: LocalizedPostMeta[] = [];
+
+  for (const post of posts) {
+    localized.push({
+      ...post,
+      localizedTitle: await translateText(post.title, locale),
+      localizedSummary: await translateText(post.summary, locale),
+    });
+  }
+
+  return localized;
+}
+
 function safeDecodeURIComponent(segment: string): string {
   try {
     return decodeURIComponent(segment);
@@ -123,6 +151,23 @@ export function getPostBySlug(slug: string): PostData | null {
   }
 
   return null;
+}
+
+export async function getLocalizedPostBySlug(
+  slug: string,
+  locale: Locale,
+): Promise<LocalizedPostData | null> {
+  const post = getPostBySlug(slug);
+  if (!post) {
+    return null;
+  }
+
+  return {
+    ...post,
+    localizedTitle: await translateText(post.title, locale),
+    localizedSummary: await translateText(post.summary, locale),
+    localizedContent: await translateText(post.content, locale),
+  };
 }
 
 function filenamesEndingInMdx(): string[] {

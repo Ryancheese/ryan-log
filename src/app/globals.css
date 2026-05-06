@@ -184,6 +184,69 @@ a {
   animation: profile-glitch 7s steps(1, end) infinite;
 }
 
+@keyframes lang-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lang-loader-ring {
+  0% {
+    box-shadow:
+      inset 0 0 0 1px rgb(56 189 248 / 0.25),
+      0 0 24px rgb(56 189 248 / 0.12);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgb(167 139 250 / 0.45),
+      0 0 30px rgb(56 189 248 / 0.2);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgb(56 189 248 / 0.25),
+      0 0 24px rgb(56 189 248 / 0.12);
+  }
+}
+
+@keyframes lang-loader-scan {
+  0% {
+    transform: translateY(-140%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(140%);
+    opacity: 0;
+  }
+}
+
+.lang-switch-loader-spin {
+  animation: lang-loader-spin 0.9s linear infinite;
+}
+
+.lang-switch-loader-ring {
+  animation: lang-loader-ring 1.8s ease-in-out infinite;
+}
+
+.lang-switch-loader-scan::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 36%,
+    rgb(56 189 248 / 0.2) 50%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  animation: lang-loader-scan 2s ease-in-out infinite;
+}
+
 .profile-chip {
   transform: translateZ(0);
   transition:

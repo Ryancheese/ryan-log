@@ -2,11 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { Locale } from "@/i18n/config";
+import { getMessages } from "@/i18n/messages";
 
 const EMAIL = "17625416243@163.com";
 const NETEASE_URL = "https://163cn.tv/5iBOD8u";
 
-export function ProfilePanel() {
+type ProfilePanelProps = {
+  locale: Locale;
+};
+
+export function ProfilePanel({ locale }: ProfilePanelProps) {
+  const messages = getMessages(locale);
+
   return (
     <div className="profile-module group relative w-full max-w-xl px-4">
       <div
@@ -35,7 +43,7 @@ export function ProfilePanel() {
               <div className="profile-avatar-scan relative h-36 w-36 overflow-hidden rounded-3xl border border-zinc-700/80 shadow-2xl md:h-44 md:w-44">
                 <Image
                   src="/avatar.png"
-                  alt="个人头像"
+                  alt={messages.profile}
                   width={352}
                   height={352}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
@@ -46,16 +54,16 @@ export function ProfilePanel() {
 
             <div className="min-w-0">
               <p className="profile-tagline font-mono text-[10px] uppercase tracking-[0.28em] text-sky-400/90">
-                &gt; 个人档案
+                &gt; {messages.profileTag}
               </p>
               <h1 className="profile-glitch-title mt-3 font-heading text-3xl font-bold tracking-tight text-zinc-50 md:text-4xl">
                 Ryan
               </h1>
               <p className="mt-2 text-base font-medium text-violet-300/90 md:text-lg">
-                资深前端工程师
+                {messages.role}
               </p>
               <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-zinc-400">
-                写代码、做工程化，也偶尔写歌。欢迎通过邮箱或网易云音乐与我联系。
+                {messages.profileDesc}
               </p>
 
               <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
@@ -73,7 +81,7 @@ export function ProfilePanel() {
                   className="profile-chip inline-flex items-center justify-center gap-2 rounded-full border border-zinc-700 bg-gradient-to-r from-rose-500/15 to-red-600/10 px-5 py-2.5 text-sm font-medium text-rose-100/90 transition hover:border-rose-400/40 hover:shadow-[0_0_24px_rgb(244_63_94_/_0.2)]"
                 >
                   <span aria-hidden>♪</span>
-                  网易云音乐人主页
+                  {messages.netease}
                 </a>
               </div>
             </div>
@@ -87,8 +95,8 @@ export function ProfilePanel() {
       </div>
 
       <p className="mt-8 text-center text-xs text-zinc-600">
-        <Link href="/" className="text-zinc-500 transition hover:text-sky-400">
-          ← 返回首页
+        <Link href={`/${locale}`} className="text-zinc-500 transition hover:text-sky-400">
+          ← {messages.backHome}
         </Link>
       </p>
     </div>

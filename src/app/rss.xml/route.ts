@@ -1,4 +1,5 @@
 import { getAllPosts } from "@/lib/posts";
+import { DEFAULT_LOCALE } from "@/i18n/config";
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ryan-log.vercel.app";
@@ -10,8 +11,8 @@ export async function GET() {
       <item>
         <title><![CDATA[${post.title}]]></title>
         <description><![CDATA[${post.summary}]]></description>
-        <link>${baseUrl}/blog/${post.slug}</link>
-        <guid>${baseUrl}/blog/${post.slug}</guid>
+        <link>${baseUrl}/${DEFAULT_LOCALE}/blog/${post.slug}</link>
+        <guid>${baseUrl}/${DEFAULT_LOCALE}/blog/${post.slug}</guid>
         <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       </item>`,
     )

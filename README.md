@@ -38,6 +38,23 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 NEXT_PUBLIC_PLAUSIBLE_DOMAIN=your-domain.com
 ```
 
+## 国际化与翻译 API
+
+- 已支持三种语言路由：`/zh`、`/en`、`/ja`
+- 旧路径（如 `/blog`）会自动重定向到默认语言路径（`/zh/blog`）
+- 文案与文章内容可通过翻译 API 自动翻译（默认源语言：中文）
+
+在 `.env.local` 中配置百度通用翻译 API：
+
+```bash
+TRANSLATE_API_URL=https://fanyi-api.baidu.com/api/trans/vip/translate
+BAIDU_TRANSLATE_APP_ID=your-app-id
+BAIDU_TRANSLATE_SECRET=your-secret
+TRANSLATE_SOURCE_LANG=zh
+```
+
+如果 `TRANSLATE_API_URL`、`BAIDU_TRANSLATE_APP_ID` 或 `BAIDU_TRANSLATE_SECRET` 缺失，站点会回退到原始文案（不调用翻译接口）。
+
 ## 部署到 Vercel
 
 1. 将项目推送到 GitHub 仓库。  

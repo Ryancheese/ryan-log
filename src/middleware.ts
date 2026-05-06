@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { DEFAULT_LOCALE, isSupportedLocale } from "@/i18n/config";
 
 const LEGACY_SLUG = "/blog/ai通用规则与技能";
 const CANONICAL_SLUG = "/blog/ai-rules-and-skills";
@@ -13,12 +14,18 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === LEGACY_SLUG) {
-    return NextResponse.redirect(new URL(CANONICAL_SLUG, request.url), 308);
+    return NextResponse.redirect(new URL(`/${DEFAULT_LOCALE}${CANONICAL_SLUG}`, request.url), 308);
+  }
+
+  const segments = pathname.split("/").filter(Boolean);
+  const firstSegment = segments[0];
+  if (!firstSegment || !isSupportedLocale(firstSegment)) {
+    return NextResponse.redirect(new URL(`/${DEFAULT_LOCALE}${pathname}`, request.url), 308);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/blog/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|rss.xml).*)"],
 };
