@@ -1,0 +1,220 @@
+---
+title: "OpenCode 安装及接入 DeepSeek 完整教程"
+date: "2026-05-08"
+summary: "从安装、配置到接入 DeepSeek，一步步带你跑通 OpenCode 这款终端 AI 编码工具，享受高性价比的代码生成体验。"
+tags: ["OpenCode", "DeepSeek", "AI", "工具", "效率"]
+cover: "/og-image.svg"
+draft: false
+slug: "opencode-deepseek-setup"
+---
+
+> OpenCode 是一个开源的终端 AI 编程助手，支持 75+ 大模型提供商。配合 DeepSeek 使用，既能保证代码生成质量，又能大幅降低 API 费用。本文从零开始，带你完成安装与配置。
+
+## 一、什么是 OpenCode
+
+OpenCode 是一款运行在终端里的 AI 编码代理（AI Coding Agent），由 [Anomaly](https://anoma.ly) 团队开源维护。它不像 IDE 插件那样依赖特定编辑器，而是在终端中独立运行，通过对话式交互帮你：
+
+- 理解项目代码结构
+- 生成功能代码与测试
+- 重构、修复 bug
+- 执行终端命令
+
+核心优势：**不绑定编辑器**、**支持任意 LLM 提供商**、**完全开源免费**。
+
+## 二、安装 OpenCode
+
+推荐四种安装方式，按个人习惯选择即可。
+
+### 方式一：安装脚本（推荐）
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+一行命令完成安装，适合大多数用户。
+
+### 方式二：Homebrew（macOS / Linux）
+
+```bash
+brew install anomalyco/tap/opencode
+```
+
+> 使用 `anomalyco/tap` 源可以获取最新版本。`brew install opencode` 也能安装，但由 Homebrew 团队维护，更新较慢。
+
+### 方式三：npm 全局安装
+
+```bash
+npm install -g opencode-ai
+```
+
+同样支持 `pnpm`、`yarn`、`bun`。
+
+### 方式四：Docker
+
+```bash
+docker run -it --rm ghcr.io/anomalyco/opencode
+```
+
+无环境依赖，但性能略低于原生安装。
+
+### 验证安装
+
+```bash
+opencode --version
+```
+
+输出版本号即表示安装成功。
+
+## 三、初始化项目
+
+进入你的项目目录，启动 OpenCode：
+
+```bash
+cd /path/to/your-project
+opencode
+```
+
+首次使用时建议运行初始化命令：
+
+```
+/init
+```
+
+这会分析你的项目结构，自动生成 `AGENTS.md` 文件，帮助 OpenCode 理解项目代码风格与约定。建议将 `AGENTS.md` 提交到 Git 仓库中。
+
+## 四、接入 DeepSeek
+
+DeepSeek 目前以高性价比著称，旗下 DeepSeek V4 Pro 在编码任务上表现优异，且 API 定价远低于同类模型。
+
+### 1）获取 API Key
+
+1. 访问 [DeepSeek 开放平台](https://platform.deepseek.com/)
+2. 注册 / 登录账号
+3. 在 API Keys 页面点击 **创建新的 API Key**
+4. 复制生成的 Key（仅显示一次，请妥善保存）
+
+### 2）在 OpenCode 中配置
+
+在 OpenCode TUI 中运行：
+
+```
+/connect
+```
+
+在弹出的列表中搜索 **DeepSeek**，选中后粘贴你的 API Key：
+
+```
+┌ API key
+│ sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+└ enter
+```
+
+### 3）选择模型
+
+接入完成后，运行以下命令查看可用模型列表：
+
+```
+/models
+```
+
+推荐选择 **DeepSeek V4 Pro**（deepseek-v4-pro），它在编码推理方面表现最佳。你也可以选择 **DeepSeek Chat** 作为轻量级替代。
+
+## 五、配置文件参考
+
+如果你习惯用配置文件管理，也可以在 `~/.config/opencode/opencode.json` 中手动定义：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "deepseek": {
+      "models": {
+        "deepseek-chat": {
+          "name": "DeepSeek Chat"
+        },
+        "deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro"
+        }
+      }
+    }
+  }
+}
+```
+
+如果需要通过代理访问（如企业内部网络），可在 `options` 中设置自定义 `baseURL`：
+
+```json
+{
+  "provider": {
+    "deepseek": {
+      "options": {
+        "baseURL": "https://your-proxy.com/v1"
+      }
+    }
+  }
+}
+```
+
+API Key 通过 `/connect` 命令管理，存储在 `~/.local/share/opencode/auth.json`，不建议在配置文件中直接存储。
+
+## 六、日常使用核心命令
+
+| 命令 | 作用 |
+|------|------|
+| `/connect` | 添加 / 切换 LLM 提供商 |
+| `/models` | 查看并选择可用模型 |
+| `/init` | 初始化项目 AGENTS.md |
+| `Tab` | 切换 Plan 模式 / Build 模式 |
+| `/undo` | 撤销上一步修改 |
+| `/redo` | 重做被撤销的修改 |
+| `/share` | 分享当前对话链接 |
+
+> 按 `Tab` 键可以在 **Plan 模式**（仅计划不执行）和 **Build 模式**（直接修改代码）之间切换。建议复杂功能先用 Plan 模式确认方案，再切回 Build 模式执行。
+
+## 七、进阶技巧
+
+### Plan 模式先行
+
+处理复杂需求时，先用 Plan 模式让 OpenCode 输出实现计划：
+
+```
+我要给用户设置页加一个 API Key 管理功能，支持创建、展示和删除 Key。
+```
+
+确认方案无误后，再切回 Build 模式说「开工吧」。
+
+### 用 @ 引用文件
+
+在对话中用 `@` 可以模糊搜索并引用项目文件：
+
+```
+帮我在 @components/Header.tsx 里加一个深色模式切换按钮
+```
+
+### 拖入图片参考
+
+直接将设计稿或截图拖入终端窗口，OpenCode 能读取图片内容并以此为参考生成代码。
+
+### 搭配 AGENTS.md 提升准确度
+
+在项目根目录维护好 `AGENTS.md`，写入项目的技术栈、目录约定、代码风格偏好等信息，OpenCode 会据此调整生成结果。
+
+## 八、常见问题
+
+### Q1：DeepSeek API 调用失败或超时
+
+优先检查 API Key 是否正确、账户余额是否充足。如果使用了代理，确认 `baseURL` 配置无误。
+
+### Q2：生成的代码不符合项目风格
+
+运行 `/init` 重新生成 `AGENTS.md`，或在 `AGENTS.md` 中手动补充项目的代码规范与命名约定。
+
+### Q3：想用其他模型怎么办
+
+OpenCode 原生支持 75+ 提供商，包括 OpenAI、Anthropic、GitHub Copilot、Ollama 本地模型等。通过 `/connect` 可以随时添加新的提供商，通过 `/models` 切换模型。
+
+## 九、结语
+
+OpenCode + DeepSeek 的组合兼顾了**编码质量**与**使用成本**。它不像 IDE 插件那样深度绑定特定编辑器，作为终端原生工具更适合在各种开发环境间灵活切换。
+
+如果你正在寻找一个不挑编辑器、不锁供应商的开源 AI 编码助手，这个组合值得一试。
