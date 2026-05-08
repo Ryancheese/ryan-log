@@ -91,15 +91,15 @@ export function getAllPosts() {
   return posts;
 }
 
-export async function getAllLocalizedPosts(locale: Locale): Promise<LocalizedPostMeta[]> {
+export async function getAllLocalizedPosts(_locale: Locale): Promise<LocalizedPostMeta[]> {
   const posts = getAllPosts();
   const localized: LocalizedPostMeta[] = [];
 
   for (const post of posts) {
     localized.push({
       ...post,
-      localizedTitle: await translateText(post.title, locale),
-      localizedSummary: await translateText(post.summary, locale),
+      localizedTitle: post.title,
+      localizedSummary: post.summary,
     });
   }
 
@@ -154,6 +154,23 @@ export function getPostBySlug(slug: string): PostData | null {
 }
 
 export async function getLocalizedPostBySlug(
+  slug: string,
+  _locale: Locale,
+): Promise<LocalizedPostData | null> {
+  const post = getPostBySlug(slug);
+  if (!post) {
+    return null;
+  }
+
+  return {
+    ...post,
+    localizedTitle: post.title,
+    localizedSummary: post.summary,
+    localizedContent: post.content,
+  };
+}
+
+export async function getTranslatedPostBySlug(
   slug: string,
   locale: Locale,
 ): Promise<LocalizedPostData | null> {

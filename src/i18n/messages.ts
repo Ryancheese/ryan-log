@@ -27,6 +27,11 @@ type Messages = {
   profileDesc: string;
   netease: string;
   backHome: string;
+  translateArticle: string;
+  translatingArticle: string;
+  articleTranslated: string;
+  translateNotNeeded: string;
+  translateFailed: string;
 };
 
 const messagesMap: Record<Locale, Messages> = {
@@ -57,6 +62,11 @@ const messagesMap: Record<Locale, Messages> = {
     profileDesc: "写代码、做工程化，也偶尔写歌。欢迎通过邮箱或网易云音乐与我联系。",
     netease: "网易云音乐人主页",
     backHome: "返回首页",
+    translateArticle: "翻译本文",
+    translatingArticle: "翻译中...",
+    articleTranslated: "已翻译",
+    translateNotNeeded: "当前语言无需翻译",
+    translateFailed: "翻译失败，请稍后重试",
   },
   en: {
     navHome: "Home",
@@ -86,6 +96,11 @@ const messagesMap: Record<Locale, Messages> = {
     profileDesc: "I write code, build engineering systems, and occasionally compose music. Feel free to reach out by email or NetEase Music.",
     netease: "NetEase Musician Page",
     backHome: "Back to Home",
+    translateArticle: "Translate Article",
+    translatingArticle: "Translating...",
+    articleTranslated: "Translated",
+    translateNotNeeded: "No translation needed",
+    translateFailed: "Translation failed. Please try again.",
   },
   ja: {
     navHome: "ホーム",
@@ -115,6 +130,11 @@ const messagesMap: Record<Locale, Messages> = {
     profileDesc: "コードを書き、開発基盤を作り、ときどき作曲もします。メールまたはNetEase Musicでお気軽にご連絡ください。",
     netease: "NetEase ミュージシャンページ",
     backHome: "ホームへ戻る",
+    translateArticle: "この記事を翻訳",
+    translatingArticle: "翻訳中...",
+    articleTranslated: "翻訳済み",
+    translateNotNeeded: "この言語は翻訳不要",
+    translateFailed: "翻訳に失敗しました。後でもう一度お試しください。",
   },
 };
 
