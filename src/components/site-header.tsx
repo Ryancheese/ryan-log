@@ -73,7 +73,7 @@ export function SiteHeader() {
             >
               <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-zinc-700 transition group-hover:ring-sky-500/50">
                 <Image
-                  src="/avatar.png"
+                  src="/avatar.jpg"
                   alt=""
                   width={72}
                   height={72}

@@ -17,6 +17,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${DEFAULT_LOCALE}${CANONICAL_SLUG}`, request.url), 308);
   }
 
+  // public 下的静态资源（如 /avatar.jpg）不能走语言重定向，否则 next/image 优化器会拿到 HTML，报 received null
+  if (/\.(?:ico|png|jpg|jpeg|gif|webp|svg|avif|woff2?|ttf|eot)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const segments = pathname.split("/").filter(Boolean);
   const firstSegment = segments[0];
   if (!firstSegment || !isSupportedLocale(firstSegment)) {
