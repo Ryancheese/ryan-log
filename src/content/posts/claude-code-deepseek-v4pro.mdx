@@ -1,0 +1,181 @@
+---
+title: "Claude Code 接入 DeepSeek V4 Pro 经验与 OpenCode 对比"
+date: "2026-05-13"
+summary: "记录 Claude Code 接入 DeepSeek V4 Pro 的完整配置过程，并从实际使用体验出发，与 OpenCode 做多维度对比，帮你选出最适合的终端 AI 编码方案。"
+tags: ["Claude Code", "DeepSeek", "OpenCode", "AI", "编码工具", "对比"]
+cover: "/og-image.svg"
+draft: false
+slug: "claude-code-deepseek-v4pro"
+---
+
+> 在 OpenCode + DeepSeek 的组合用了一段时间后，我开始尝试 Claude Code 接入 DeepSeek V4 Pro。两者都是终端 AI 编码工具，但设计理念与使用体验差异显著。本文记录配置过程与对比心得。
+
+## 一、为什么尝试 Claude Code
+
+在此之前我已经深度使用 OpenCode 一段时间，它作为开源终端 AI 编码工具表现稳定。但 Claude Code 有几个吸引我的点：
+
+- **Anthropic 官方出品**：与 Claude API 的集成深度和优化程度无可比拟
+- **强大的 Agent 系统**：内置多种专业子代理（代码审查、文件探索、计划等），任务分解能力更强
+- **工具链成熟度**：权限控制、Hook 系统、工作树隔离等工程化特性更完备
+- **Claude 4.X 系列模型**：Sonnet/Opus 在编码推理上的表现经过充分验证
+
+一个常见顾虑是 Claude API 的价格。但 Anthropic 的模型可以通过第三方网关接入，DeepSeek V4 Pro 也可以作为备选模型使用——这就是本文要解决的核心场景。
+
+## 二、Claude Code 接入 DeepSeek 的两种方式
+
+Claude Code 不像 OpenCode 有内置的 `/connect` 多供应商面板，它默认只对接 Anthropic API。但有两种方式可以接入 DeepSeek：
+
+### 方式一：通过兼容代理网关
+
+部署或使用一个兼容 Anthropic Messages API 的代理服务（如 one-api、liteLLM），将 DeepSeek API 包装成 Anthropic 格式。
+
+**代理服务配置示例**（以 one-api 为例）：
+
+```yaml
+# 在 one-api 中添加 DeepSeek 渠道
+渠道类型: 自定义
+Base URL: https://api.deepseek.com/v1
+模型映射:
+  deepseek-v4-pro -> claude-opus-4-7
+密钥: sk-your-deepseek-api-key
+```
+
+**Claude Code 侧配置**：
+
+在 `~/.claude/settings.json` 中设置：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:3000/v1",
+    "ANTHROPIC_API_KEY": "sk-your-one-api-key"
+  }
+}
+```
+
+API Key 也可以通过环境变量注入：
+
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:3000/v1"
+export ANTHROPIC_API_KEY="sk-your-one-api-key"
+```
+
+### 方式二：使用 Claude Code 的第三方模型 provider 配置
+
+在项目的 `.claude/settings.json` 中配置第三方模型：
+
+```json
+{
+  "apiKeyHelper": "echo $DEEPSEEK_API_KEY",
+  "baseURL": "https://api.deepseek.com/beta"
+}
+```
+
+这种方式适用于 DeepSeek 原生支持 Anthropic Messages API 兼容端点的情况。目前 DeepSeek 的 `/beta` 端点已在逐步开放这一能力。
+
+## 三、完整配置流程
+
+以下是我实际跑通的步骤：
+
+### 1）准备 DeepSeek API Key
+
+从 [DeepSeek 开放平台](https://platform.deepseek.com/api_keys) 获取 API Key，确保账户有足够余额。
+
+### 2）搭建代理层（one-api）
+
+```bash
+docker run -d -p 3000:3000 \
+  -e SQL_DSN="root:password@tcp(localhost:3306)/oneapi" \
+  justsong/one-api
+```
+
+在 one-api 管理后台中添加 DeepSeek 渠道，配置模型映射关系。
+
+### 3）配置 Claude Code
+
+在 `~/.claude/settings.json` 中：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:3000/v1/messages",
+    "ANTHROPIC_API_KEY": "sk-one-api-key"
+  }
+}
+```
+
+### 4）验证连接
+
+在终端运行：
+
+```bash
+claude
+```
+
+首次启动后，简单问一句 "Hello" 测试连通性。
+
+## 四、使用体验：Claude Code + DeepSeek V4 Pro
+
+### 优势
+
+- **推理能力强**：DeepSeek V4 Pro 在复杂代码逻辑分析和重构任务上表现出色
+- **成本可控**：通过 DeepSeek API 的价格远低于直接使用 Anthropic 官方 API
+- **工具生态成熟**：Claude Code 的 Hook 系统、工作树隔离、权限控制等机制成熟，适合团队协作
+- **子代理系统**：内置的 Explore、Plan、code-reviewer 等子代理能并行处理多步骤任务
+
+### 不足
+
+- **配置门槛高**：需要搭建中间代理层，不像 OpenCode 那样原生的 `/connect` 体验
+- **部分功能可能受限**：某些 Anthropic 特有功能（如 extended thinking 的精细控制）在第三方模型上可能行为不一致
+- **模型映射维护**：需要在代理层手动维护模型名称映射，DeepSeek 模型更新后需要同步调整
+
+## 五、Claude Code vs OpenCode：多维度对比
+
+| 维度 | Claude Code | OpenCode |
+|------|------------|----------|
+| **开源性** | 闭源（Anthropic 官方） | 完全开源 |
+| **多供应商支持** | 默认 Anthropic，需代理接入第三方 | 原生支持 75+ 提供商 |
+| **配置体验** | 需代理层或手工配置 | `/connect` 交互式面板 |
+| **子代理系统** | 内置多种专业子代理 | 无 |
+| **Hook 系统** | 完善（可编程钩子） | 有限 |
+| **工作树隔离** | 原生支持 | 不支持 |
+| **价格** | 原生 API 较贵，走 DeepSeek 可大幅降低 | 按所选供应商定价，DeepSeek 原生接入成本更低 |
+| **IDE 集成** | CLI 独立运行，VS Code/JetBrains 扩展 | CLI 独立运行 |
+| **上手难度** | 中等（配置较复杂） | 低（安装即用） |
+| **适合场景** | 重度依赖、团队协作、复杂任务分解 | 轻量快速、个人项目、多模型切换 |
+
+## 六、我的选择与建议
+
+经过一段时间的使用，我的结论是：
+
+**两者不互斥，按场景选择：**
+
+- **日常快速编码**：用 OpenCode 直连 DeepSeek，配置简单，启动快
+- **复杂重构 / 多步骤任务**：用 Claude Code，子代理系统能并行探索代码库、制定计划、执行修改
+- **团队协作项目**：用 Claude Code，Hook 和工作树隔离让协作更规范
+- **成本敏感型项目**：两者都走 DeepSeek API，成本差异不大；OpenCode 少了代理层维护成本
+
+如果你只有精力深入一款，我的建议是：
+
+- **个人开发者**：OpenCode，零配置多模型切换，够用且灵活
+- **团队 / 重度用户**：Claude Code，工程化能力更强，长期回报更高
+
+## 七、踩过的坑
+
+### 代理兼容性
+
+one-api 默认的 Anthropic 响应格式与 Claude Code 期望有细微差异。如果遇到解析错误，检查代理日志并确认模型映射名称与 Claude Code 调用的模型名一致。
+
+### API 端点路径
+
+`ANTHROPIC_BASE_URL` 的值需要精确匹配 Claude Code 拼接路径的方式。通常设为基础路径即可（不含 `/v1/messages`），Claude Code 会自动拼接后缀。
+
+### 模型名称不一致
+
+DeepSeek V4 Pro 在不同渠道中可能叫 `deepseek-v4-pro` 或 `deepseek-chat`。在代理层做好映射，避免 Claude Code 侧频繁修改。
+
+## 八、结语
+
+Claude Code 和 OpenCode 代表了终端 AI 编码工具的两种设计思路：一个追求工程完备性，一个追求轻量与开放。接入 DeepSeek V4 Pro 后，Claude Code 的成本劣势被大幅抹平，剩下的就是你对工作流的需求。
+
+两者我都持续在使用，后续有新的发现会更新这篇文章。
