@@ -42,7 +42,7 @@ export function ProfilePanel({ locale }: ProfilePanelProps) {
               <div className="profile-avatar-ring absolute -inset-2 rounded-3xl bg-gradient-to-br from-sky-400/50 via-violet-500/40 to-cyan-400/50 opacity-70 blur-md transition duration-500 group-hover:opacity-100 group-hover:blur-lg motion-reduce:opacity-50 motion-reduce:blur-none" />
               <div className="profile-avatar-scan relative h-36 w-36 overflow-hidden rounded-3xl border border-zinc-700/80 shadow-2xl md:h-44 md:w-44">
                 <Image
-                  src="/avatar.png"
+                  src="/avatar.jpg"
                   alt={messages.profile}
                   width={352}
                   height={352}
