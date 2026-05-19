@@ -4,6 +4,7 @@ import Script from "next/script";
 import { ConditionalFooter } from "@/components/conditional-footer";
 import { CursorParticles } from "@/components/cursor-particles";
 import { SiteHeader } from "@/components/site-header";
+import { XiaozhiChatWidget } from "@/components/xiaozhi-chat-widget";
 import "./globals.css";
 
 const headingFont = Space_Grotesk({
@@ -70,6 +71,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
         </div>
+        <XiaozhiChatWidget />
       </body>
     </html>
   );

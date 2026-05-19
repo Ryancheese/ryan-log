@@ -32,6 +32,22 @@ type Messages = {
   articleTranslated: string;
   translateNotNeeded: string;
   translateFailed: string;
+  xiaozhiTitle: string;
+  xiaozhiSubtitle: string;
+  xiaozhiWelcome: string;
+  xiaozhiPlaceholder: string;
+  xiaozhiSend: string;
+  xiaozhiSending: string;
+  xiaozhiThinking: string;
+  xiaozhiOpen: string;
+  xiaozhiClose: string;
+  xiaozhiFailed: string;
+  xiaozhiEmptyReply: string;
+  xiaozhiVoiceOn: string;
+  xiaozhiVoiceOff: string;
+  xiaozhiVoiceHint: string;
+  xiaozhiProxyHint: string;
+  xiaozhiTimeoutHint: string;
 };
 
 const messagesMap: Record<Locale, Messages> = {
@@ -67,6 +83,22 @@ const messagesMap: Record<Locale, Messages> = {
     articleTranslated: "已翻译",
     translateNotNeeded: "当前语言无需翻译",
     translateFailed: "翻译失败，请稍后重试",
+    xiaozhiTitle: "阿楠",
+    xiaozhiSubtitle: "在线，来唠嗑",
+    xiaozhiWelcome: "哈啰～我是阿楠，台湾腔陪聊啦！想聊心情、八卦、日常都可以，随便开话题～",
+    xiaozhiPlaceholder: "想说点什么…",
+    xiaozhiSend: "发送",
+    xiaozhiSending: "发送中",
+    xiaozhiThinking: "阿楠思考中...",
+    xiaozhiOpen: "打开阿楠对话",
+    xiaozhiClose: "关闭阿楠对话",
+    xiaozhiFailed: "对话失败，请稍后重试",
+    xiaozhiEmptyReply: "阿楠暂时没有想好怎么说～",
+    xiaozhiVoiceOn: "开启语音",
+    xiaozhiVoiceOff: "关闭语音",
+    xiaozhiVoiceHint: "本次用文字回复；若需语音请确认已运行 npm run xiaozhi:proxy",
+    xiaozhiProxyHint: "连不上语音服务，请先运行 npm run xiaozhi:proxy",
+    xiaozhiTimeoutHint: "回复超时了，再试一次或关掉语音",
   },
   en: {
     navHome: "Home",
@@ -101,6 +133,22 @@ const messagesMap: Record<Locale, Messages> = {
     articleTranslated: "Translated",
     translateNotNeeded: "No translation needed",
     translateFailed: "Translation failed. Please try again.",
+    xiaozhiTitle: "Anan",
+    xiaozhiSubtitle: "Online · Chat",
+    xiaozhiWelcome: "Hey! I'm Anan. Let's just chat—life, moods, random stuff. No tech homework.",
+    xiaozhiPlaceholder: "Say something…",
+    xiaozhiSend: "Send",
+    xiaozhiSending: "Sending",
+    xiaozhiThinking: "XiaoZhi is thinking...",
+    xiaozhiOpen: "Open XiaoZhi chat",
+    xiaozhiClose: "Close XiaoZhi chat",
+    xiaozhiFailed: "Chat failed. Please try again.",
+    xiaozhiEmptyReply: "No reply content received.",
+    xiaozhiVoiceOn: "Enable voice",
+    xiaozhiVoiceOff: "Disable voice",
+    xiaozhiVoiceHint: "Text reply only; run npm run xiaozhi:proxy for voice",
+    xiaozhiProxyHint: "Voice service unavailable; run npm run xiaozhi:proxy",
+    xiaozhiTimeoutHint: "Timed out—try again or turn voice off",
   },
   ja: {
     navHome: "ホーム",
@@ -135,6 +183,22 @@ const messagesMap: Record<Locale, Messages> = {
     articleTranslated: "翻訳済み",
     translateNotNeeded: "この言語は翻訳不要",
     translateFailed: "翻訳に失敗しました。後でもう一度お試しください。",
+    xiaozhiTitle: "阿楠",
+    xiaozhiSubtitle: "オンライン",
+    xiaozhiWelcome: "こんにちは、阿楠です。雑談しましょう！",
+    xiaozhiPlaceholder: "話したいことを入力…",
+    xiaozhiSend: "送信",
+    xiaozhiSending: "送信中",
+    xiaozhiThinking: "考え中…",
+    xiaozhiOpen: "チャットを開く",
+    xiaozhiClose: "チャットを閉じる",
+    xiaozhiFailed: "チャットに失敗しました。後でもう一度お試しください。",
+    xiaozhiEmptyReply: "返信がありません。",
+    xiaozhiVoiceOn: "音声をオン",
+    xiaozhiVoiceOff: "音声をオフ",
+    xiaozhiVoiceHint: "テキストで返信しました",
+    xiaozhiProxyHint: "音声サービスに接続できません",
+    xiaozhiTimeoutHint: "タイムアウトしました",
   },
 };
 

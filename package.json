@@ -4,25 +4,34 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "xiaozhi:proxy": "node scripts/xiaozhi-ws-proxy.mjs",
+    "xiaozhi:register": "node scripts/xiaozhi-ota-register.mjs",
+    "xiaozhi:mcp:ping": "node scripts/xiaozhi-mcp-ping.mjs",
+    "xiaozhi:mcp:bridge": "node scripts/xiaozhi-mcp-bridge.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "bufferutil": "^4.1.0",
     "gray-matter": "^4.0.3",
     "next": "^15.5.15",
+    "opus-decoder": "^0.7.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
     "reading-time": "^1.5.0",
     "rehype-highlight": "^7.0.2",
     "rehype-slug": "^6.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "utf-8-validate": "^6.0.6",
+    "ws": "^8.20.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.5.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.5.15",

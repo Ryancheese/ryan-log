@@ -1,0 +1,15 @@
+# 可选：将 WebSocket 代理部署到公网（Railway / Fly.io / VPS）
+# docker build -f Dockerfile.ws-proxy -t xiaozhi-ws-proxy .
+# docker run -p 8787:8787 \
+#   -e XIAOZHI_WS_URL=wss://api.tenclass.net/xiaozhi/v1/ \
+#   -e XIAOZHI_DEVICE_ID=... -e XIAOZHI_CLIENT_ID=... -e XIAOZHI_DEVICE_TOKEN=... \
+#   xiaozhi-ws-proxy
+
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+COPY scripts/load-env-local.mjs scripts/xiaozhi-ws-proxy.mjs ./scripts/
+ENV XIAOZHI_WS_PROXY_PORT=8787
+EXPOSE 8787
+CMD ["node", "scripts/xiaozhi-ws-proxy.mjs"]

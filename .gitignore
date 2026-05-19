@@ -35,6 +35,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# 小智云端设备凭证（含 clientId / token）
+.xiaozhi-device.json
 
 # vercel
 .vercel
