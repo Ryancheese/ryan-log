@@ -1,0 +1,245 @@
+---
+title: "接入小智 AI：从本地语音到 Vercel 外网聊天完整实战"
+date: "2026-05-21"
+summary: "一篇讲透小智 AI 聊天接入的完整教程：本地 Opus 语音、Vercel 外网可用、MCP 接入点作用边界、常见问题排查与上线清单。"
+tags: ["小智AI", "Chatbot", "WebSocket", "Vercel", "DeepSeek", "MCP"]
+cover: "/og-image.svg"
+draft: false
+slug: "xiaozhi-ai-chatbot-full-guide"
+---
+
+这篇是我把博客接入「小智 AI 聊天机器人」的完整复盘，目标不是演示，而是让你能**直接照着上线**。
+
+你会拿到三套能力：
+
+- 本地开发：支持 WebSocket + Opus 真语音；
+- 线上部署：Vercel 外网可直接聊天；
+- 扩展能力：理解 MCP 接入点到底该怎么用，避免接错地址。
+
+---
+
+## 一、先把三个地址分清楚（90% 的坑都在这）
+
+很多人卡住不是代码问题，而是把地址类型混了。
+
+### 1）聊天 WebSocket 地址（用于对话）
+
+示例：
+
+```bash
+ws://127.0.0.1:8000/xiaozhi/v1/
+wss://api.tenclass.net/xiaozhi/v1/
+```
+
+这是聊天主通道，负责 `hello / listen / tts / llm` 消息流。
+
+### 2）MCP 接入点地址（用于工具扩展）
+
+示例：
+
+```bash
+wss://api.xiaozhi.me/mcp/?token=...
+```
+
+这是给 MCP 工具服务用的，不是聊天通道。  
+它的作用是让智能体“多技能”（比如计算器、外部 API），不是直接输出语音。
+
+### 3）浏览器本地代理地址（仅本地开发）
+
+示例：
+
+```bash
+ws://127.0.0.1:8787
+```
+
+浏览器不能自定义某些握手头（如 `Device-Id`），所以本地通常需要一个中间代理转发。
+
+---
+
+## 二、整体架构设计（我最终落地的方式）
+
+### 本地开发（语音优先）
+
+```text
+Browser Widget
+  -> ws://127.0.0.1:8787 (proxy)
+  -> ws://127.0.0.1:8000/xiaozhi/v1/ (xiaozhi-server)
+```
+
+优点：
+
+- 语音自然（Opus 真流式）；
+- 调试直观，日志好看。
+
+### 线上部署（可用性优先）
+
+```text
+Browser Widget
+  -> /api/xiaozhi/chat-fast (Vercel Serverless)
+  -> DeepSeek API
+```
+
+优点：
+
+- 不依赖你本机 `8787`；
+- 外网访客可直接使用。
+
+线上语音可用浏览器朗读兜底（`speechSynthesis`），确保体验闭环。
+
+---
+
+## 三、实现步骤（按顺序做）
+
+## 1）准备后端能力
+
+至少准备一条可用路径：
+
+- A：本地 `xiaozhi-esp32-server`（用于 Opus 语音）；
+- B：DeepSeek 文本接口（用于 Vercel 外网稳定可用）。
+
+建议两条都配：本地体验好、线上可靠。
+
+## 2）前端聊天组件
+
+推荐把组件拆成三层：
+
+- `Widget UI`：面板、消息列表、输入框、语音按钮；
+- `Session 层`：WebSocket 连接管理、重连、超时、partial 文本回调；
+- `Fallback 层`：WebSocket 失败自动回退到服务端文本接口。
+
+关键实践：
+
+- 打开面板时预热连接（减少首包延迟）；
+- 连接断开时若已收到部分文本，优先显示，不直接报错；
+- 长回复用流式更新，不要等整段结束才渲染。
+
+## 3）生产环境模式切换
+
+增加一个统一配置接口（例如 `/api/xiaozhi/config`），由服务端告诉前端当前模式：
+
+- `useServerChat=true`：Vercel 外网，走 `/api/xiaozhi/chat-fast`；
+- `useServerChat=false`：本地开发，走 WebSocket Opus。
+
+这样不会把本地地址写死到线上代码里。
+
+## 4）MCP 单独处理
+
+若你要让控制台显示 MCP「已连接」，需要常驻一个桥接进程持续连接 MCP endpoint。  
+它与聊天链路解耦，别混在聊天连接里做。
+
+---
+
+## 四、环境变量推荐（按场景）
+
+### 1）本地开发（语音）
+
+```bash
+XIAOZHI_WS_URL=ws://127.0.0.1:8000/xiaozhi/v1/
+NEXT_PUBLIC_XIAOZHI_WS_PROXY_URL=ws://127.0.0.1:8787
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+运行：
+
+```bash
+cd ~/xiaozhi-server && docker-compose up -d
+cd /your-project && npm run xiaozhi:proxy
+npm run dev
+```
+
+### 2）Vercel 线上（外网）
+
+最小必需：
+
+```bash
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+不要设置：
+
+```bash
+NEXT_PUBLIC_XIAOZHI_WS_PROXY_URL=ws://127.0.0.1:8787
+```
+
+这类本地地址在线上无效。
+
+---
+
+## 五、Vercel 上线清单（可直接照抄）
+
+1. GitHub 推送到主分支；
+2. Vercel 导入仓库；
+3. 配置 `DEEPSEEK_API_KEY`、`DEEPSEEK_MODEL`；
+4. Redeploy；
+5. 线上访问后检查：
+   - 是否出现聊天按钮；
+   - 发送「你好」是否返回；
+   - 开启语音是否有浏览器朗读。
+
+若你配置了环境变量但没生效，通常是漏了 Redeploy。
+
+---
+
+## 六、常见问题排查（我踩过的）
+
+### Q1：线上没看到聊天按钮
+
+先打：
+
+```bash
+/api/xiaozhi/config
+```
+
+检查返回的 `enabled` 是否为 `true`。  
+如果是 `false`，优先检查 Vercel 环境变量是否配到当前环境（Production / Preview）。
+
+### Q2：提示“语音不可用，已用文字回复”
+
+这通常是预期内兜底：
+
+- WebSocket 通道不可用；
+- 但文本服务可用，所以降级成功。
+
+对线上来说，这比“完全不可用”更合理。要真语音可再上公网 WebSocket 代理。
+
+### Q3：MCP 显示“未连接”
+
+不是聊天挂了，而是 MCP 没有常驻连接进程。  
+启动桥接进程后在控制台点“刷新”即可。
+
+### Q4：端口占用 `EADDRINUSE: 8787`
+
+说明代理已经在跑了，不要重复起。  
+要重启就先杀再起：
+
+```bash
+kill $(lsof -t -i:8787) 2>/dev/null; npm run xiaozhi:proxy
+```
+
+---
+
+## 七、体验优化建议（可选）
+
+- 聊天窗打开时自动 focus 输入框；
+- 首字到达后立即结束 loading；
+- 回答气泡支持 `white-space: pre-wrap`；
+- 失败信息放轻提示，不污染聊天语境；
+- 线上默认“聊天可用优先”，语音做增强层。
+
+---
+
+## 八、结语
+
+接入聊天机器人最容易误判的一点是：  
+“语音链路不通 = 整体不可用”。其实不是。
+
+工程上应该做的是：
+
+- 把通道拆层（WebSocket / API / MCP）；
+- 把策略拆层（本地最佳体验 / 线上最高可用）；
+- 把故障变成可降级，而不是整页失效。
+
+按这套做完，你就能得到一个真正可发布、可维护、可扩展的博客聊天能力。
+
