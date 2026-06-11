@@ -1,0 +1,467 @@
+---
+title: "前端高频面试题汇总：按模块分类的系统复习指南"
+date: "2026-06-11"
+summary: "把前端面试高频考点按 HTML/CSS、JavaScript、浏览器原理、网络、框架、工程化、TypeScript、手写题八大模块分类整理，每题附答题要点，适合系统复习与查漏补缺。"
+tags: ["面试", "JavaScript", "CSS", "React", "Vue", "工程化", "前端"]
+cover: "/og-image.svg"
+draft: false
+slug: "frontend-interview-questions"
+---
+
+> 这份汇总不是题海，而是按模块分类的「答题框架」：每题给出考察点与回答要点，方便你在面试前快速过一遍，也方便平时查漏补缺。
+
+## 一、HTML / CSS 篇
+
+### 1. 盒模型有哪几种？如何切换？
+
+**考察点**：CSS 基础理解。
+
+- 标准盒模型（`content-box`）：`width` 只包含内容区；
+- IE 盒模型（`border-box`）：`width` 包含内容 + padding + border；
+- 通过 `box-sizing` 切换，工程上通常全局设置 `border-box` 更好算尺寸。
+
+### 2. BFC 是什么？有哪些触发条件和应用场景？
+
+**考察点**：布局原理。
+
+- BFC（块级格式化上下文）是一块独立渲染区域，内部布局不影响外部；
+- 触发：`overflow: hidden`、`display: flow-root`、`float`、`position: absolute/fixed`、`display: inline-block` 等；
+- 应用：清除浮动、阻止外边距合并（margin collapse）、自适应两栏布局。
+
+### 3. 水平垂直居中的常用方案
+
+至少答出三种，并说明适用条件：
+
+```css
+/* 1. Flex（首选） */
+.parent { display: flex; justify-content: center; align-items: center; }
+
+/* 2. Grid */
+.parent { display: grid; place-items: center; }
+
+/* 3. absolute + transform（不依赖父容器尺寸） */
+.child { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+```
+
+### 4. `position` 各取值的区别
+
+重点说清 `sticky` 的生效条件（父容器不能 `overflow: hidden`，且需指定 `top` 等阈值）和 `fixed` 在有 `transform` 祖先时会退化为相对该祖先定位。
+
+### 5. 重排（Reflow）和重绘（Repaint）的区别？如何减少？
+
+- 重排：几何属性变化（宽高、位置），代价大；重绘：外观变化（颜色），代价小；
+- 优化：批量修改样式（class 切换）、用 `transform/opacity` 做动画（走合成层）、读写分离避免强制同步布局、虚拟列表减少节点数。
+
+### 6. Flex 布局中 `flex: 1` 是什么的缩写？
+
+`flex: 1 1 0%`，即 `flex-grow: 1; flex-shrink: 1; flex-basis: 0%`。要能解释三个值各自的含义，以及 `flex-basis: 0%` 与 `auto` 在分配剩余空间时的差异。
+
+---
+
+## 二、JavaScript 基础篇
+
+### 1. `var` / `let` / `const` 的区别
+
+答题要点：作用域（函数级 vs 块级）、变量提升与暂时性死区（TDZ）、重复声明、`const` 锁引用不锁内容。
+
+### 2. 闭包是什么？应用场景与注意点
+
+- 定义：函数与其词法作用域的组合，内层函数可访问外层函数变量；
+- 场景：模块化私有变量、防抖节流、柯里化、循环中保存索引；
+- 注意：被引用的变量不会被 GC 回收，滥用可能造成内存泄漏。
+
+### 3. 原型链与 `instanceof` 原理
+
+- 每个对象有 `__proto__` 指向构造函数的 `prototype`，逐层向上直到 `null`；
+- `instanceof` 沿原型链查找构造函数的 `prototype` 是否出现；
+- 加分项：`Object.create(null)` 创建无原型对象、`Symbol.hasInstance` 可自定义行为。
+
+### 4. `this` 指向规则
+
+按优先级回答：
+
+1. `new` 绑定 → 新创建的对象；
+2. 显式绑定（`call` / `apply` / `bind`）；
+3. 隐式绑定（谁调用指向谁）；
+4. 默认绑定（非严格模式 `window`，严格模式 `undefined`）；
+5. 箭头函数没有自己的 `this`，取定义时外层作用域的 `this`。
+
+### 5. 事件循环（Event Loop）：宏任务与微任务
+
+- 执行顺序：同步代码 → 清空微任务队列 → 取一个宏任务 → 再清微任务，循环往复；
+- 微任务：`Promise.then`、`queueMicrotask`、`MutationObserver`；
+- 宏任务：`setTimeout`、`setInterval`、I/O、UI 渲染；
+- 高频陷阱题：`async/await` 中 `await` 之后的代码相当于 `then` 回调，属于微任务。
+
+```js
+console.log(1);
+setTimeout(() => console.log(2));
+Promise.resolve().then(() => console.log(3));
+console.log(4);
+// 输出：1 4 3 2
+```
+
+### 6. 深拷贝怎么实现？要处理哪些边界？
+
+- 简单场景：`structuredClone()`（现代浏览器原生支持）；
+- `JSON.parse(JSON.stringify())` 的缺陷：丢失 `undefined`/函数/`Symbol`、`Date` 变字符串、无法处理循环引用、`Map/Set` 丢失；
+- 手写版本需处理：循环引用（用 `WeakMap` 缓存）、特殊对象类型、原型保留。
+
+### 7. 防抖与节流的区别及实现
+
+- 防抖（debounce）：事件停止触发 N 毫秒后才执行，适合搜索输入；
+- 节流（throttle）：N 毫秒内最多执行一次，适合滚动、resize；
+
+```js
+function debounce(fn, delay) {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+function throttle(fn, interval) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last >= interval) {
+      last = now;
+      fn.apply(this, args);
+    }
+  };
+}
+```
+
+### 8. `==` 与 `===`、隐式类型转换
+
+要点：`===` 不转换类型；`==` 的转换规则（null 与 undefined 互等、对象转原始值走 `valueOf`/`toString`）；工程建议统一用 `===`。
+
+---
+
+## 三、ES6+ 与异步篇
+
+### 1. Promise 有哪几种状态？`all` / `race` / `allSettled` / `any` 的区别
+
+- 状态：pending → fulfilled / rejected，不可逆；
+- `all`：全部成功才成功，一个失败立即失败；
+- `allSettled`：等全部结束，返回每项状态；
+- `race`：第一个落定的结果（无论成败）；
+- `any`：第一个成功的结果，全失败才失败。
+
+### 2. `async/await` 的本质
+
+Generator + 自动执行器的语法糖；`await` 会把后续代码包成微任务；错误用 `try/catch` 捕获。加分项：并发场景不要串行 `await`，应先发起再 `await`，或用 `Promise.all`。
+
+### 3. `Map` / `WeakMap` / `Set` / `WeakSet` 的区别
+
+重点说 `WeakMap`：键必须是对象、弱引用不阻止 GC、不可遍历；典型应用是给对象挂私有数据、深拷贝循环引用缓存。
+
+### 4. 模块化：CommonJS 与 ES Module 的区别
+
+- CJS：运行时加载、值拷贝、同步、`this` 指向当前模块；
+- ESM：编译时静态分析（支持 tree-shaking）、值引用、异步、严格模式；
+- 加分项：`package.json` 的 `type: "module"`、`exports` 字段双格式导出。
+
+---
+
+## 四、浏览器原理与性能篇
+
+### 1. 从输入 URL 到页面展示发生了什么？
+
+经典必考题，按阶段回答：
+
+1. URL 解析 → 检查缓存（强缓存）；
+2. DNS 解析（递归 + 迭代查询）；
+3. TCP 三次握手、TLS 握手（HTTPS）；
+4. 发送 HTTP 请求 → 服务端响应；
+5. 浏览器解析 HTML 构建 DOM、解析 CSS 构建 CSSOM；
+6. 合成 Render Tree → Layout → Paint → Composite；
+7. JS 执行可能阻塞解析（`defer` / `async` 的区别要会讲）。
+
+### 2. 强缓存与协商缓存
+
+- 强缓存：`Cache-Control: max-age`（优先）、`Expires`；命中不发请求，状态码 200 (from cache)；
+- 协商缓存：`ETag / If-None-Match`（优先）、`Last-Modified / If-Modified-Since`；命中返回 304；
+- 实践：HTML 用协商缓存，带 hash 的静态资源用一年强缓存。
+
+### 3. XSS 与 CSRF 的区别与防御
+
+- XSS（注入脚本）：输入转义、CSP、`HttpOnly` Cookie；
+- CSRF（伪造请求）：`SameSite` Cookie、CSRF Token、校验 `Origin/Referer`；
+- 一句话区分：XSS 偷你的凭证，CSRF 借你的凭证。
+
+### 4. 跨域解决方案
+
+CORS（重点讲预检请求 OPTIONS 的触发条件）、代理（开发 devServer / 生产 Nginx）、JSONP（仅 GET、历史方案）、`postMessage`（跨窗口通信）。
+
+### 5. 浏览器存储方案对比
+
+| 方案 | 容量 | 生命周期 | 是否随请求发送 |
+|------|------|----------|----------------|
+| Cookie | ~4KB | 可设过期 | 是 |
+| localStorage | ~5MB | 永久 | 否 |
+| sessionStorage | ~5MB | 会话级 | 否 |
+| IndexedDB | 大（数百 MB） | 永久 | 否 |
+
+### 6. 性能优化体系（高频开放题）
+
+建议按「加载 → 渲染 → 交互」三段答：
+
+- **加载**：代码分割、懒加载、CDN、压缩（gzip/brotli）、图片格式（WebP/AVIF）、预加载 `preload/prefetch`；
+- **渲染**：SSR/SSG、关键 CSS 内联、骨架屏、虚拟列表；
+- **交互**：防抖节流、Web Worker、`requestIdleCallback`；
+- 加分项：会用 Core Web Vitals（LCP、INP、CLS）衡量并举优化实例。
+
+---
+
+## 五、网络 / HTTP 篇
+
+### 1. HTTP 1.1 / 2 / 3 的核心区别
+
+- 1.1：长连接、管道化（有队头阻塞）；
+- 2：二进制分帧、多路复用、头部压缩（HPACK）、服务端推送；
+- 3：基于 QUIC（UDP），解决 TCP 层队头阻塞，连接迁移更快。
+
+### 2. HTTPS 握手过程
+
+要点：非对称加密协商出对称密钥，后续通信用对称加密；证书链验证防中间人；会话复用（Session Ticket / TLS 1.3 0-RTT）。
+
+### 3. 常见状态码
+
+重点区分：301/302/304、400/401/403/404、500/502/503/504。加分：302 与 307 对请求方法保留的差异。
+
+### 4. GET 与 POST 的区别
+
+除了语义和参数位置，加分点：GET 幂等可缓存、POST 不幂等；浏览器对 GET 有 URL 长度限制（服务器实现决定）；预检请求的触发与 Content-Type 有关。
+
+### 5. WebSocket 与 HTTP 的关系？心跳为什么必要？
+
+- 握手阶段借用 HTTP Upgrade，之后是独立的全双工协议；
+- 心跳（ping/pong）防止中间代理断开空闲连接，并及时感知断线触发重连；
+- 加分项：结合实际项目讲断线重连、消息补发设计。
+
+---
+
+## 六、框架篇（React / Vue）
+
+### 1. 虚拟 DOM 是什么？一定更快吗？
+
+- 用 JS 对象描述 DOM，diff 后批量更新；
+- 并非绝对更快：它是「可维护性与性能的折中」，避免手动操作 DOM 的同时保证下限；
+- 加分项：能讲 diff 策略（同层比较、key 的作用、类型不同直接替换）。
+
+### 2. React：为什么需要 key？index 作 key 有什么问题？
+
+key 帮助 diff 算法识别节点身份；用 index 在列表增删、排序时会导致状态错位与多余渲染，应使用稳定唯一 ID。
+
+### 3. React Hooks 的使用规则与原理
+
+- 规则：只能在顶层调用、只能在函数组件/自定义 Hook 中调用；
+- 原理：Hooks 按调用顺序存在 Fiber 的链表上，顺序错乱会取错状态；
+- 高频追问：`useEffect` 与 `useLayoutEffect` 的执行时机区别（绘制后 vs 绘制前同步）。
+
+### 4. React 闭包陷阱
+
+`useEffect` / 定时器中拿到的是旧 state。解法：依赖数组写全、函数式更新 `setCount(c => c + 1)`、`useRef` 保存最新值。
+
+### 5. Vue：响应式原理（Vue 2 vs Vue 3）
+
+- Vue 2：`Object.defineProperty` 劫持 getter/setter，数组与新增属性需 `$set`；
+- Vue 3：`Proxy` 代理整个对象，天然支持新增属性与数组索引，配合 `Reflect`；
+- 加分项：依赖收集（effect/watcher）与触发更新的流程。
+
+### 6. Vue：`computed` 与 `watch` 的区别
+
+`computed` 有缓存、声明式、适合派生数据；`watch` 适合副作用（请求、操作 DOM）；`watchEffect` 自动收集依赖的差异也常被追问。
+
+### 7. 组件通信方式汇总
+
+- React：props / 回调、Context、状态库（Redux/Zustand）、组合（children）；
+- Vue：props / emit、`provide/inject`、Pinia、`v-model` 双向绑定语法糖；
+- 通用：EventBus（慎用）、URL 状态、全局 store。
+
+### 8. SSR / SSG / ISR 的区别与适用场景
+
+- SSR：请求时渲染，适合个性化、SEO 强需求页面；
+- SSG：构建时生成，适合内容稳定的页面（博客、文档）；
+- ISR：静态 + 定时再生成，平衡新鲜度与性能；
+- 加分项：结合 Next.js 的 App Router 讲 Server Components 与流式渲染。
+
+---
+
+## 七、工程化与 TypeScript 篇
+
+### 1. Webpack 与 Vite 的本质区别
+
+- Webpack：先打包再启动，开发服务器随项目变大变慢；
+- Vite：开发时基于浏览器原生 ESM 按需编译（esbuild 预构建依赖），生产用 Rollup 打包；
+- 加分项：HMR 原理差异、为什么 Vite 冷启动快。
+
+### 2. Tree-shaking 的原理与失效场景
+
+基于 ESM 静态分析标记未使用导出；失效场景：CJS 模块、副作用代码（需配置 `sideEffects`）、动态属性访问。
+
+### 3. 前端为什么需要 monorepo？常见方案？
+
+代码复用、统一版本与规范、原子提交跨包改动；方案：pnpm workspace、Turborepo、Nx；要会讲依赖提升与幽灵依赖问题。
+
+### 4. TypeScript：`interface` 与 `type` 的区别
+
+- `interface` 可声明合并、适合描述对象与类契约；
+- `type` 支持联合、交叉、条件类型、映射类型等更强表达；
+- 工程建议：公共 API 用 interface，复杂类型运算用 type。
+
+### 5. TypeScript：常考工具类型
+
+`Partial` / `Required` / `Pick` / `Omit` / `Record` / `ReturnType`；加分项：能手写一个，比如：
+
+```ts
+type MyPick<T, K extends keyof T> = {
+  [P in K]: T[P];
+};
+```
+
+### 6. `any` / `unknown` / `never` 的区别
+
+`any` 放弃检查；`unknown` 是类型安全的 any（使用前必须收窄）；`never` 表示不可能出现的值，常用于穷尽性检查。
+
+---
+
+## 八、手写题篇（出现率极高）
+
+### 1. 手写 Promise.all
+
+```js
+function promiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let count = 0;
+    const list = Array.from(promises);
+    if (list.length === 0) return resolve([]);
+    list.forEach((p, i) => {
+      Promise.resolve(p).then((value) => {
+        results[i] = value;
+        if (++count === list.length) resolve(results);
+      }, reject);
+    });
+  });
+}
+```
+
+要点：保持顺序、非 Promise 值要包装、空数组直接 resolve。
+
+### 2. 手写 instanceof
+
+```js
+function myInstanceof(obj, Ctor) {
+  if (obj === null || typeof obj !== "object") return false;
+  let proto = Object.getPrototypeOf(obj);
+  while (proto) {
+    if (proto === Ctor.prototype) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}
+```
+
+### 3. 手写 call / bind
+
+```js
+Function.prototype.myCall = function (ctx, ...args) {
+  ctx = ctx ?? globalThis;
+  const key = Symbol();
+  ctx[key] = this;
+  const result = ctx[key](...args);
+  delete ctx[key];
+  return result;
+};
+
+Function.prototype.myBind = function (ctx, ...preset) {
+  const fn = this;
+  return function (...args) {
+    // new 调用时 this 指向新实例，忽略绑定的 ctx
+    if (new.target) return new fn(...preset, ...args);
+    return fn.apply(ctx, [...preset, ...args]);
+  };
+};
+```
+
+### 4. 数组扁平化
+
+```js
+// 1. 原生
+arr.flat(Infinity);
+
+// 2. 递归 reduce
+const flatten = (arr) =>
+  arr.reduce(
+    (acc, cur) => acc.concat(Array.isArray(cur) ? flatten(cur) : cur),
+    [],
+  );
+```
+
+### 5. 实现并发控制（限制最大并发数）
+
+```js
+async function asyncPool(limit, tasks) {
+  const results = [];
+  const executing = new Set();
+  for (const [i, task] of tasks.entries()) {
+    const p = Promise.resolve().then(task);
+    results[i] = p;
+    executing.add(p);
+    p.finally(() => executing.delete(p));
+    if (executing.size >= limit) {
+      await Promise.race(executing);
+    }
+  }
+  return Promise.all(results);
+}
+```
+
+高频场景题：「100 个请求，最多同时发 5 个」就是考这个。
+
+### 6. 手写发布订阅（EventEmitter）
+
+```js
+class EventEmitter {
+  #events = new Map();
+
+  on(name, fn) {
+    if (!this.#events.has(name)) this.#events.set(name, new Set());
+    this.#events.get(name).add(fn);
+    return this;
+  }
+
+  off(name, fn) {
+    this.#events.get(name)?.delete(fn);
+    return this;
+  }
+
+  once(name, fn) {
+    const wrapper = (...args) => {
+      fn(...args);
+      this.off(name, wrapper);
+    };
+    return this.on(name, wrapper);
+  }
+
+  emit(name, ...args) {
+    this.#events.get(name)?.forEach((fn) => fn(...args));
+    return this;
+  }
+}
+```
+
+---
+
+## 九、复习建议
+
+1. **按模块过，不要刷散题**：先把每个模块的「主干题」讲顺，再补细节追问；
+2. **每题准备 30 秒版本和 3 分钟版本**：面试官追问时才展开；
+3. **手写题动手写，不要背**：边界条件（空输入、this 指向、循环引用）才是区分度；
+4. **结合项目讲**：性能优化、跨域、WebSocket 心跳等题，能落到自己项目经历上分数最高；
+5. **面试前一晚**：只过本文每节的标题和加粗要点，保持框架清晰即可。
+
+祝你拿到满意的 offer。
