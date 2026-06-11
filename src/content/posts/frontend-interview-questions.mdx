@@ -1,7 +1,7 @@
 ---
 title: "前端高频面试题汇总：按模块分类的系统复习指南（2026 版）"
 date: "2026-06-11"
-summary: "参考 vue3js.cn 面试官系列等高频题库，按 HTML/CSS、JavaScript、ES6+、浏览器、网络、Vue 2、Vue 3、React、工程化、手写题十大模块分类整理，覆盖 150+ 考点与答题要点。"
+summary: "参考 vue3js.cn 面试官系列等高频题库，按 HTML/CSS、JavaScript、ES6+、浏览器、网络、Vue 2、Vue 3、React、工程化、手写题十大模块分类整理，每题附详细解析、代码示例与常见追问，覆盖 180+ 考点。"
 tags: ["面试", "JavaScript", "CSS", "React", "Vue", "Vue3", "工程化", "前端"]
 cover: "/og-image.svg"
 draft: false
@@ -91,121 +91,435 @@ slug: "frontend-interview-questions"
 
 减少选择器层级、避免 `@import`、关键 CSS 内联、减少重排属性动画、合理使用 `will-change`。
 
-### 16–20. 速览题
+### 16. 设备像素 / DPR / PPI
 
-| 题 | 答题要点 |
-|----|----------|
-| 设备像素 / DPR / PPI | 物理像素 vs CSS 像素，Retina 屏 DPR=2/3 |
-| `position` 各值 | sticky 需 top + 父级无 overflow:hidden |
-| 层叠上下文 | z-index 仅在同层叠上下文比较 |
-| 伪类 vs 伪元素 | `:hover` vs `::before` |
-| `@media` vs `@container` | 视口响应 vs 容器响应 |
+**CSS 像素（逻辑像素）：** 网页布局用的抽象单位。
+
+**物理像素：** 屏幕实际发光点。Retina 屏上 1 CSS 像素可能对应 2×2 或 3×3 物理像素。
+
+**DPR（devicePixelRatio）：** 物理像素 / CSS 像素，如 iPhone DPR=3。
+
+**PPI：** 每英寸像素密度，硬件参数。
+
+**实践：** 高清图用 `@2x/@3x` 或 `srcset`；`window.devicePixelRatio` 做 canvas 高清绘制。
+
+### 17. `position` 各值
+
+| 值 | 脱离文档流 | 定位参照 |
+|----|-----------|----------|
+| static | 否 | 默认 |
+| relative | 否 | 自身原位置 |
+| absolute | 是 | 最近非 static 祖先 |
+| fixed | 是 | 视口 |
+| sticky | 否→滚动后类似 fixed | 滚动容器 + 阈值 top |
+
+**sticky 失效常见原因：** 祖先有 `overflow: hidden/auto`；未设 `top/left`；父级高度不够。
+
+### 18. 层叠上下文
+
+元素满足条件（如 `position`+z-index、`opacity<1`、`transform`、`filter` 等）会创建**新的层叠上下文**。
+
+**z-index 只在同一层叠上下文内比较**；子元素 z-index 再大也无法压过其他上下文里的兄弟。
+
+### 19. 伪类 vs 伪元素
+
+- **伪类 `:`**：元素**状态**，如 `:hover`、`:nth-child(2)`、`:focus`；
+- **伪元素 `::`**：创建**虚拟节点**，如 `::before`、`::after`、`::selection`。
+
+`::before/after` 必须写 `content`，常做装饰线、清除浮动、图标。
+
+### 20. `@media` vs `@container`
+
+- **`@media`：** 根据**视口**宽度响应；
+- **`@container`（容器查询）：** 根据**父容器**宽度响应，组件更可复用。
+
+```css
+.card-container { container-type: inline-size; }
+@container (min-width: 400px) {
+  .card { flex-direction: row; }
+}
+```
 
 ---
 
 ## 二、JavaScript 基础篇（25 题）
 
+> JS 基础是几乎所有前端面试的必考区。下面每题尽量给出「概念 + 原理 + 代码 + 追问」。
+
 ### 1. JS 数据类型？存储差别？
 
-- 原始：string、number、boolean、null、undefined、symbol、bigint；
-- 引用：object（含 Array、Function、Date 等）；
-- 原始存栈（快），引用存堆、栈存指针。
+**8 种类型（ES2020+）：**
+- **原始类型（7 种）：** `string`、`number`、`boolean`、`null`、`undefined`、`symbol`、`bigint`
+- **引用类型：** `object`（含 `Array`、`Function`、`Date`、`RegExp` 等）
+
+**存储差异：**
+- 原始值存在**栈**中，拷贝时复制值本身，互不影响；
+- 引用类型对象在**堆**中，栈里存的是**指针**；赋值/传参拷贝的是指针，多个变量可能指向同一对象。
+
+```js
+const a = { n: 1 };
+const b = a;
+b.n = 2;
+console.log(a.n); // 2 —— 同一引用
+```
+
+**typeof 陷阱：** `typeof null === 'object'`（历史 bug）；`typeof [] === 'object'`，区分数组用 `Array.isArray()`。
+
+---
 
 ### 2. `var` / `let` / `const`
 
-函数作用域 vs 块级作用域、提升与 TDZ、重复声明、`const` 锁引用。
+| | var | let / const |
+|---|-----|-------------|
+| 作用域 | 函数作用域 | 块级作用域 `{}` |
+| 提升 | 声明提升，初始化为 undefined | 暂时性死区 TDZ，声明前访问报错 |
+| 重复声明 | 允许 | 不允许 |
+| const | — | 锁**引用**，对象内部属性仍可改 |
+
+```js
+console.log(x); // undefined（var 提升）
+var x = 1;
+
+console.log(y); // ReferenceError（TDZ）
+let y = 2;
+```
+
+**最佳实践：** 默认 `const`，需要重新赋值用 `let`，避免 `var`。
+
+---
 
 ### 3. 闭包
 
-函数 + 词法环境；场景：私有变量、防抖节流、柯里化；注意内存泄漏。
+**定义：** 函数能够「记住」并访问其**词法作用域**中的变量，即使函数在该作用域外执行。
+
+```js
+function createCounter() {
+  let count = 0;
+  return {
+    inc() { return ++count; },
+    get() { return count; }
+  };
+}
+const c = createCounter();
+c.inc(); // 1 —— count 被闭包持有，外部无法直接访问
+```
+
+**应用场景：** 模块化私有变量、防抖节流、柯里化、React 函数组件 state 闭包。
+
+**内存泄漏：** 闭包引用的变量不会被 GC，若闭包长期存活且引用了大对象/DOM，需主动解除引用。
+
+---
 
 ### 4. 原型链与 `instanceof`
 
-`obj.__proto__` 链式查找；`instanceof` 沿链查 `Constructor.prototype`。
+每个对象有 `[[Prototype]]`（可通过 `__proto__` 或 `Object.getPrototypeOf` 访问）。访问属性时，自身没有则沿原型链向上找，直到 `null`。
+
+```js
+function Foo() {}
+Foo.prototype.bar = 1;
+const f = new Foo();
+f.bar; // 1，来自 Foo.prototype
+
+f instanceof Foo; // true：沿 f 的原型链能否找到 Foo.prototype
+```
+
+**手写 instanceof 思路：** 不断 `obj = obj.__proto__`，看是否等于 `Constructor.prototype`。
+
+---
 
 ### 5. 继承方式
 
-原型链、构造函数、组合、寄生组合（推荐）、ES6 `class extends`。
+1. **原型链继承：** `Child.prototype = new Parent()` —— 引用类型属性共享；
+2. **构造函数继承：** `Parent.call(this)` —— 无法继承原型方法；
+3. **组合继承：** 两者结合，Parent 调两次；
+4. **寄生组合（推荐）：** `Object.create(Parent.prototype)` + `Parent.call(this)`；
+5. **ES6 class extends：** 语法糖，底层仍是原型链。
+
+```js
+class Animal {
+  constructor(name) { this.name = name; }
+  speak() { console.log(this.name); }
+}
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name);
+    this.breed = breed;
+  }
+}
+```
+
+---
 
 ### 6. `this` 指向规则
 
-new > 显式 bind/call/apply > 隐式 > 默认；箭头函数取词法 this。
+优先级（高 → 低）：
+1. **`new` 绑定：** 新对象作为 this；
+2. **显式绑定：** `call/apply/bind` 指定 this；
+3. **隐式绑定：** `obj.fn()` 中 this 是 obj；
+4. **默认绑定：** 独立函数调用，非严格模式为 window，严格模式为 undefined；
+5. **箭头函数：** 无 own this，捕获定义时的词法 this。
+
+```js
+const obj = {
+  name: 'A',
+  fn: () => console.log(this.name), // 箭头函数 this 来自外层
+  fn2() { console.log(this.name); }  // 'A'
+};
+obj.fn2();
+```
+
+---
 
 ### 7. 执行上下文与执行栈
 
-创建阶段（VO/LexicalEnvironment）→ 执行阶段；调用栈 LIFO。
+**执行上下文类型：** 全局、函数、eval（少用）。
+
+**创建阶段：** 确定 this、词法环境（let/const）、变量环境（var）、outer 引用。
+
+**执行阶段：** 逐行运行，赋值、函数调用。
+
+**调用栈：** 后进先出。函数调用 push 新上下文，return 后 pop。栈溢出 = 递归过深。
+
+---
 
 ### 8. 事件循环（Event Loop）
 
-同步 → 微任务清空 → 一个宏任务 → 微任务…；`async/await` 后续是微任务。
+```
+同步代码（调用栈）
+    ↓ 栈空
+微任务队列（全部清空）：Promise.then、queueMicrotask、MutationObserver
+    ↓
+取一个宏任务：setTimeout、setInterval、I/O、UI rendering
+    ↓ 重复
+```
+
+```js
+console.log(1);
+setTimeout(() => console.log(2), 0);
+Promise.resolve().then(() => console.log(3));
+console.log(4);
+// 1 → 4 → 3 → 2
+```
+
+**async/await：** `await` 之后的代码相当于 `Promise.then` 回调，是微任务。
+
+---
 
 ### 9. 事件模型：捕获、目标、冒泡
 
-`addEventListener` 第三参 `true` 捕获；`stopPropagation` / `preventDefault` 区别。
+DOM 事件流三阶段：**捕获**（window → target）→ **目标** → **冒泡**（target → window）。
+
+```js
+el.addEventListener('click', handler, true);  // 捕获
+el.addEventListener('click', handler, false); // 冒泡（默认）
+```
+
+- **`stopPropagation`：** 阻止继续传播；
+- **`preventDefault`：** 阻止默认行为（如链接跳转、表单提交），与冒泡无关。
+
+---
 
 ### 10. 事件委托（代理）
 
-利用冒泡把监听绑在父节点；动态列表、减少监听器数量。
+把子元素的事件监听绑在**共同祖先**上，利用冒泡处理。
+
+```js
+list.addEventListener('click', (e) => {
+  const li = e.target.closest('li');
+  if (!li || !list.contains(li)) return;
+  console.log(li.dataset.id);
+});
+```
+
+**优点：** 动态增删子节点无需重新绑监听；减少监听器数量。
+
+**注意：** 不能委托不冒泡的事件（如 focus/blur，可用 focusin/focusout）。
+
+---
 
 ### 11. `new` 操作符做了什么？
 
-创建对象 → 链式原型 → 绑定 this 执行构造函数 → 返回对象（构造函数无 return 对象时）。
+1. 创建空对象；
+2. 对象 `[[Prototype]]` 链接到 `Constructor.prototype`；
+3. 以新对象为 this 执行构造函数；
+4. 若构造函数返回对象则用它，否则返回新对象。
+
+```js
+function myNew(Constructor, ...args) {
+  const obj = Object.create(Constructor.prototype);
+  const result = Constructor.apply(obj, args);
+  return result instanceof Object ? result : obj;
+}
+```
+
+---
 
 ### 12. `call` / `apply` / `bind` 区别
 
-`call(thisArg, ...args)`、`apply(thisArg, [args])`、`bind` 返回新函数；手写 bind 注意 `new` 场景。
+- **`call(thisArg, a, b, c)`：** 立即调用，参数列表；
+- **`apply(thisArg, [a, b, c])`：** 立即调用，参数数组；
+- **`bind(thisArg, a, b)`：** 返回**新函数**，不立即调用；支持 partial application。
+
+**手写 bind 要点：** 若作为构造函数调用（`new boundFn()`），this 应指向新实例，不能强行绑定的 thisArg。
+
+---
 
 ### 13. 深拷贝 vs 浅拷贝
 
-`Object.assign`、展开是浅拷贝；`structuredClone`、递归 + WeakMap 处理循环引用。
+**浅拷贝：** 只复制第一层，嵌套对象仍共享引用。`Object.assign`、`{...obj}`、数组 `slice/concat`。
+
+**深拷贝：**
+- `structuredClone(obj)`（现代浏览器，不支持 function、symbol 某些场景）；
+- `JSON.parse(JSON.stringify())` —— 丢 function、undefined、Date、循环引用报错；
+- 递归 + `WeakMap` 处理循环引用。
+
+---
 
 ### 14. 防抖与节流
 
-防抖：停止触发后执行（搜索）；节流：间隔内最多一次（scroll）。
+**防抖（debounce）：** 连续触发时，只在上次停止触发 **wait ms 后**执行一次。适合：搜索框输入、窗口 resize 结束。
+
+**节流（throttle）：** 每 **interval ms** 最多执行一次。适合：scroll、mousemove、按钮防重复点击。
+
+```js
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+```
+
+---
 
 ### 15. `typeof` vs `instanceof`
 
-`typeof null === 'object'` 历史 bug；`instanceof` 查原型链，跨 iframe 失效。
+- **typeof：** 判断原始类型，对 object/function 有用；`null` 误判；
+- **instanceof：** 判断原型链，适合自定义类；跨 iframe 不同 realm 的 Array 会失败。
+
+更严谨的类型判断：`Object.prototype.toString.call(val)` → `[object Array]` 等。
+
+---
 
 ### 16. 内存泄漏常见场景
 
-未清理的定时器/监听器、闭包引用 DOM、全局变量、 detached DOM 树。
+- 未清除的 `setInterval` / 事件监听；
+- 闭包持有已移除 DOM 的引用；
+- 全局变量意外挂载 `window.xxx`；
+- 定时器回调引用了大对象；
+- 控制台打印的对象阻止 GC（DevTools 打开时）。
+
+**排查：** Chrome Memory 快照对比、Performance 面板。
+
+---
 
 ### 17. 本地存储对比
 
-Cookie（4KB、随请求发送）、localStorage、sessionStorage、IndexedDB。
+| | Cookie | localStorage | sessionStorage | IndexedDB |
+|---|--------|--------------|----------------|-----------|
+| 容量 | ~4KB | ~5MB | ~5MB | 很大 |
+| 生命周期 | 可设过期 | 永久 | 标签页关闭清除 | 永久 |
+| 随请求发送 | 是 | 否 | 否 | 否 |
+| API | document.cookie | 同步 KV | 同步 KV | 异步、结构化 |
+
+**Cookie 用途：** 登录 Token（HttpOnly + Secure + SameSite 防 XSS/CSRF）。
+
+---
 
 ### 18. 尾递归
 
-函数最后一步调用自身，引擎可优化栈；JS 引擎优化有限，了解概念即可。
+函数最后一步是**返回**自身调用，且无需保留当前栈帧。部分引擎可优化为循环，避免栈溢出。
+
+```js
+function factorial(n, acc = 1) {
+  if (n <= 1) return acc;
+  return factorial(n - 1, n * acc); // 尾调用
+}
+```
+
+JS 引擎对 TCO 优化有限，深递归仍建议改循环。
+
+---
 
 ### 19. 函数缓存（memoize）
 
-用 Map 存参数 → 结果；斐波那契、纯函数计算。
+用 Map 以**参数序列化**为 key 缓存结果，适合纯函数、斐波那契、昂贵计算。
+
+```js
+function memoize(fn) {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+}
+```
+
+---
 
 ### 20. 数字精度丢失
 
-0.1 + 0.2 !== 0.3；用整数运算、`decimal.js`、展示层 `toFixed`。
+IEEE 754 双精度浮点无法精确表示 0.1。`0.1 + 0.2 === 0.30000000000000004`。
+
+**解决：** 转整数运算（分/厘）、`Number.EPSILON` 比较、`decimal.js`/`big.js`、展示层 `toFixed`（注意四舍五入规则）。
+
+---
 
 ### 21. 判断元素是否在可视区域
 
-`IntersectionObserver`（推荐）、`getBoundingClientRect` + scroll 计算。
+**IntersectionObserver（推荐）：**
+
+```js
+const io = new IntersectionObserver(([entry]) => {
+  if (entry.isIntersecting) loadImage();
+}, { root: null, threshold: 0.1 });
+io.observe(el);
+```
+
+传统：`getBoundingClientRect()` 与 `window.innerHeight` 比较，scroll 时需节流。
+
+---
 
 ### 22. 大文件上传断点续传
 
-分片（chunk）+ 哈希校验 + 服务端合并 + 断点记录（localStorage/服务端）。
+1. **分片：** `File.slice` 按 chunkSize 切分；
+2. **哈希：** SparkMD5 算文件指纹，秒传/校验；
+3. **并发上传** 各 chunk，带 chunkIndex、total；
+4. **服务端** 暂存 chunk，全部完成后 merge；
+5. **断点记录：** localStorage 或服务端记录已上传 chunk，重连续传。
+
+---
 
 ### 23. 上拉加载 / 下拉刷新
 
-scroll 监听 + 节流；或 `IntersectionObserver` 哨兵元素；移动端 touch 事件。
+**上拉：** 列表底部哨兵元素 + `IntersectionObserver`，进入视口触发 `loadMore`；或 scrollTop + clientHeight >= scrollHeight - threshold，需节流。
+
+**下拉：** 移动端 touchstart/touchmove/touchend 计算位移；或使用 better-scroll 等库；注意与浏览器原生下拉刷新冲突。
+
+---
 
 ### 24. 常见 Web 攻击与防御
 
-XSS（转义、CSP）、CSRF（Token、SameSite）、点击劫持（X-Frame-Options）、SQL 注入（后端）。
+| 攻击 | 原理 | 防御 |
+|------|------|------|
+| XSS | 注入恶意脚本 | 转义输出、CSP、HttpOnly Cookie |
+| CSRF | 跨站伪造请求 | SameSite Cookie、CSRF Token、Referer 校验 |
+| 点击劫持 | iframe 透明覆盖 | X-Frame-Options / CSP frame-ancestors |
+| SQL 注入 | 拼接 SQL | 参数化查询（后端） |
+
+---
 
 ### 25. AJAX 原理
 
-`XMLHttpRequest` / `fetch`；异步请求、回调 → Promise；CORS 跨域。
+`XMLHttpRequest` 或 `fetch` 异步请求服务器，不刷新页面更新局部 UI。
+
+**演进：** 回调 → Promise → async/await；axios 封装拦截器、取消、转换。
+
+**跨域：** 浏览器同源策略限制；CORS 响应头、开发代理、JSONP（仅 GET，已过时）。
 
 ---
 
@@ -351,339 +665,1313 @@ HTTP Upgrade 握手；全双工；心跳与重连设计。
 
 ## 六、Vue 2 篇（30 题）
 
-> Vue 2 相关面试仍常见，尤其 legacy 项目与 Options API 对比题。
+> Vue 2 在存量项目面试中仍高频出现。下面每题按「怎么答 → 原理 → 追问」展开，建议每题能口述 1～2 分钟。
 
 ### 1. 说说你对 Vue 的理解？
 
-渐进式框架：模板/响应式/组件化/生态（Router、Vuex/Pinia）；MVVM 思想，数据驱动视图。
+**怎么答：** Vue 是一套用于构建用户界面的**渐进式 JavaScript 框架**。所谓「渐进式」，是指你可以只用它的响应式数据绑定，也可以逐步引入路由（Vue Router）、状态管理（Vuex/Pinia）、构建工具（Vite/Webpack）组成完整 SPA 应用。
+
+**核心特性：**
+- **响应式数据驱动视图**：数据变了，DOM 自动更新，开发者主要关心 state 而非手动操作 DOM；
+- **组件化**：单文件组件（SFC）把 template / script / style 封装在一起，利于复用与维护；
+- **模板语法**：`v-if`、`v-for`、`v-model` 等指令降低 UI 逻辑编写成本；
+- **虚拟 DOM + diff**：批量计算最小 DOM 变更，平衡性能与开发体验。
+
+**和 React 对比（常追问）：** Vue 默认双向绑定（`v-model`）、模板偏 HTML 友好；React 强调 JSX 与单向数据流，生态更「库」而非「框架」。两者都基于组件化 + 虚拟 DOM，选型看团队习惯。
+
+---
 
 ### 2. SPA 单页应用的理解与优缺点
 
-优点：体验流畅、前后端分离；缺点：首屏慢、SEO 弱（可 SSR 补）；hash/history 路由。
+**是什么：** 整个应用只有一个 HTML 页面，路由切换通过 JS 动态替换视图组件，而不是整页刷新。
+
+**优点：**
+- 页面切换流畅，接近原生 App 体验；
+- 前后端分离，接口复用；
+- 组件状态可跨「页面」保留（配合 keep-alive）。
+
+**缺点：**
+- **首屏慢**：需下载并执行整包 JS 后才渲染；
+- **SEO 弱**：爬虫拿到的 HTML 可能几乎是空的（需 SSR/预渲染）；
+- **前进后退、分享链接** 需路由层（hash 或 history）额外处理。
+
+**路由模式：**
+- `hash`：`#/about`，兼容性好，无需服务端配置；
+- `history`：`/about`，URL 美观，但生产环境刷新需 Nginx fallback 到 `index.html`。
+
+**首屏优化方向（常追问）：** 路由懒加载、骨架屏、CDN、Gzip/Brotli、代码分割、SSR/Nuxt。
+
+---
 
 ### 3. `v-show` vs `v-if`
 
-`v-if` 条件渲染（DOM 销毁/创建）；`v-show` 切换 `display`，适合频繁切换。
+| | `v-if` | `v-show` |
+|---|--------|----------|
+| DOM | 条件为 false 时不渲染/销毁 | 始终渲染，切换 `display` |
+| 切换开销 | 高（创建/销毁组件） | 低（改 CSS） |
+| 适用 | 不常切换、需懒加载 | 频繁显隐（如 Tab） |
+
+**注意：** `v-if` 为 false 时内部指令、子组件、事件监听都不会存在；`v-show` 只是隐藏，仍会占用内存。
+
+---
 
 ### 4. 为什么 `v-if` 和 `v-for` 不建议一起用？
 
-`v-for` 优先级更高，每个 item 都走一遍 `v-if`，性能差；应用 computed 过滤后再 v-for。
+Vue 2 中 **`v-for` 优先级高于 `v-if`**，意味着 `v-if` 会在每一个循环项上执行一遍，列表很大时性能很差，且逻辑容易混乱。
+
+```vue
+<!-- 不推荐：每个 user 都判断一次 v-if -->
+<li v-for="user in users" v-if="user.active" :key="user.id">
+
+<!-- 推荐：先用 computed 过滤 -->
+<li v-for="user in activeUsers" :key="user.id">
+```
+
+```js
+computed: {
+  activeUsers() {
+    return this.users.filter(u => u.active);
+  }
+}
+```
+
+Vue 3 中两者优先级已调整，但**工程上仍建议分开写**，可读性更好。
+
+---
 
 ### 5. Vue 实例挂载过程发生了什么？
 
-`new Vue` → 初始化 initLifecycle/initEvents/initRender → `beforeCreate` → initInjections/initState → `created` → `$mount` → 编译 template → 首次 render → `beforeMount` → patch DOM → `mounted`。
+从 `new Vue({ el: '#app' })` 到页面出现，大致流程：
+
+1. **初始化**：`initLifecycle`、`initEvents`、`initRender`；
+2. **`beforeCreate`**：data、methods 尚未注入，无法访问；
+3. **初始化 inject / state / props / methods / watch**；
+4. **`created`**：可访问 data，DOM 未挂载；
+5. **`$mount`**：编译 template（如果没有 render 函数）；
+6. **生成 render 函数 → 创建 VNode**；
+7. **`beforeMount`**；
+8. **`patch` 真实 DOM**；
+9. **`mounted`**：可访问 `$el`，适合发请求、操作 DOM、第三方库初始化。
+
+**常追问：** 父组件先创建完子组件挂载，还是子先 mounted？——子组件 `mounted` 完成后，父组件才 `mounted`（由内向外）。
+
+---
 
 ### 6. Vue 生命周期（常用钩子）
 
-创建：`beforeCreate/created`；挂载：`beforeMount/mounted`；更新：`beforeUpdate/updated`；销毁：`beforeDestroy/destroyed`（Vue3 为 `beforeUnmount/unmounted`）；`activated/deactivated`（keep-alive）。
+```
+创建阶段：beforeCreate → created
+挂载阶段：beforeMount → mounted
+更新阶段：beforeUpdate → updated（数据变、DOM 未更新 / 已更新）
+销毁阶段：beforeDestroy → destroyed（Vue3：beforeUnmount → unmounted）
+缓存组件：activated → deactivated（keep-alive 专属）
+```
+
+**使用场景举例：**
+- `created`：调接口拿初始数据（SSR 时服务端也会走）；
+- `mounted`：依赖 DOM 的逻辑（ECharts、地图、测量尺寸）；
+- `beforeDestroy`：清定时器、解绑事件、销毁第三方实例，防内存泄漏；
+- `activated`：从 keep-alive 切回时刷新列表数据。
+
+---
 
 ### 7. 为什么 `data` 必须是函数？
 
-组件复用时每个实例需要独立数据对象；根实例可以是对象。
+根实例 `new Vue({ data: { count: 0 } })` 可以是对象，因为只实例化一次。
 
-### 8. 响应式原理（Vue 2）
+**组件会被复用多次**，若 `data` 是对象，所有组件实例会**共享同一份引用**：
 
-`Object.defineProperty` 递归劫持；数组通过重写 `push/pop/splice` 等方法；新增属性需 `Vue.set`；依赖收集 Dep + Watcher。
+```js
+// 错误示范：多个 <Counter /> 共享同一个 count
+data: { count: 0 }
+
+// 正确：每次创建组件返回新对象
+data() {
+  return { count: 0 };
+}
+```
+
+---
+
+### 8. 响应式原理（Vue 2）—— 高频深挖题
+
+Vue 2 通过 **`Object.defineProperty`** 递归遍历 `data`，对每个属性定义 `getter/setter`：
+
+**依赖收集（track）：** 渲染或 computed 执行时，用到的属性会把自己的 `Dep` 收集当前 `Watcher`；
+
+**派发更新（trigger）：** 属性被修改时，通知所有依赖它的 Watcher 重新计算 → 触发组件 re-render。
+
+**数组的特殊处理：** `defineProperty` 无法监听索引赋值和 `length` 变化，Vue 2 **重写了数组的 7 个变异方法**（`push/pop/shift/unshift/splice/sort/reverse`），在方法内手动触发更新。
+
+**局限（Vue 3 改进点）：**
+- 无法检测对象**新增/删除**属性 → 需 `Vue.set` / `Vue.delete`；
+- 初始化时需递归遍历，大对象有性能成本；
+- 无法原生监听 Map/Set。
+
+---
 
 ### 9. 给对象添加新属性界面不刷新？
 
-Vue 2 无法检测新增属性；用 `this.$set(obj, key, val)` 或替换整个对象。
+因为新属性**没有被 defineProperty 劫持**，不是响应式的。
+
+```js
+// Vue 2
+this.$set(this.user, 'age', 18);
+// 或替换整个对象
+this.user = { ...this.user, age: 18 };
+
+// Vue 3 直接赋值即可（Proxy 代理）
+user.age = 18;
+```
+
+---
 
 ### 10. 双向绑定原理
 
-`v-model` = `:value` + `@input`（组件上是 `:modelValue` + `@update:modelValue`）；底层仍是单向数据流 + 事件回写。
+`v-model` 是语法糖，本质是 **props 下行 + 事件上行**：
+
+```vue
+<!-- 原生 input -->
+<input v-model="text" />
+<!-- 等价于 -->
+<input :value="text" @input="text = $event.target.value" />
+
+<!-- 自定义组件 Vue 3 -->
+<MyInput v-model="text" />
+<!-- 等价于 -->
+<MyInput :modelValue="text" @update:modelValue="text = $event" />
+```
+
+Vue 底层仍是**单向数据流**，只是帮你封装了「改值回写」这一步。复杂表单推荐仍用显式 `:value` + `@change`，逻辑更清晰。
+
+---
 
 ### 11. `$nextTick` 理解
 
-DOM 更新异步批量 flush；在下次 DOM 更新后执行回调；底层 Promise > MutationObserver > setImmediate > setTimeout。
+Vue 的 DOM 更新是**异步批量**的：同一事件循环内多次改 data，只会触发一次 patch。
 
-### 12. 组件通信方式
+```js
+this.message = '更新';
+console.log(this.$el.textContent); // 可能还是旧值
+this.$nextTick(() => {
+  console.log(this.$el.textContent); // 新值
+});
+```
 
-props / `$emit`；`$parent/$children`（不推荐）；`provide/inject`；Vuex/Pinia；EventBus（Vue3 移除）；`$refs`；URL/query。
+**实现降级顺序：** Promise → MutationObserver → setImmediate → setTimeout。
+
+**使用场景：** 改完数据后要读 DOM 尺寸、focus 输入框、初始化依赖 DOM 的第三方库。
+
+---
+
+### 12. 组件通信方式（务必能列举 5 种以上）
+
+| 方式 | 场景 | 说明 |
+|------|------|------|
+| props / `$emit` | 父子 | 最基础，单向数据流 |
+| `$parent` / `$children` | 父子 | 强耦合，不推荐 |
+| `provide` / `inject` | 跨多级 | 祖先向后代注入，适合主题、权限 |
+| Vuex / Pinia | 全局 | 多组件共享状态 |
+| EventBus | 任意 | Vue 2 常用 `$on/$emit`，Vue 3 已移除 |
+| `$refs` | 父调子方法 | 命令式，破坏封装 |
+| `$attrs` / `$listeners` | 属性透传 | 封装高阶组件 |
+| URL / query / localStorage | 跨页面 | 分享、持久化 |
+
+**项目举例：** 用户信息放 Pinia，列表页与详情页共享；弹窗组件用 `v-model:visible` + emit 关闭。
+
+---
 
 ### 13. `computed` vs `watch` vs `methods`
 
-computed 缓存依赖；watch 副作用；methods 每次渲染重新执行。
+**computed：**
+- 基于依赖缓存，依赖不变则不重新计算；
+- 必须有返回值，适合**派生状态**（过滤列表、总价）。
+
+**watch：**
+- 监听某个源变化执行**副作用**（调接口、操作 DOM、路由跳转）；
+- 可配置 `deep`、`immediate`。
+
+**methods：**
+- 每次渲染都会重新执行，**无缓存**；
+- 适合事件处理，不适合在 template 里做重计算。
+
+```js
+computed: {
+  fullName() { return this.first + ' ' + this.last; } // 有缓存
+},
+watch: {
+  userId(id) { this.fetchUser(id); } // 副作用
+},
+methods: {
+  onClick() { /* 事件 */ }
+}
+```
+
+---
 
 ### 14. `key` 的作用
 
-diff 时标识节点身份，复用 DOM；不要用 index 作 key（增删排序会乱）。
+diff 算法通过 **key** 判断 VNode 是否为同一节点。key 相同且 tag 相同 → 复用 DOM 并更新属性；不同 → 销毁重建。
+
+**为什么不要用 index 作 key：**
+
+```vue
+<!-- 删除第一项时，index 全变，导致错误复用、输入框内容错乱 -->
+<li v-for="(item, index) in list" :key="index">
+```
+
+应使用稳定唯一 id：`item.id`。
+
+---
 
 ### 15. 虚拟 DOM 与 diff 算法
 
-同层比较；tag/key 不同则替换；双端比较 + 最长递增子序列（Vue3）；key 影响复用策略。
+**虚拟 DOM：** 用 JS 对象描述真实 DOM 结构，先在内存中 diff，再批量更新真实 DOM。
+
+**Vue 2 diff 策略（同层比较）：**
+- 只比较同一层级，不跨层；
+- tag 或 key 不同 → 直接替换整个子树；
+- 列表 diff：双端指针 + 最长递增子序列（Vue 3 优化移动次数）。
+
+**虚拟 DOM 一定更快吗？** 不一定。简单场景直接操作 DOM 可能更快；VDOM 的价值在于**可维护性**和**跨平台**（Weex、小程序），以及批量更新时的性能下限。
+
+---
 
 ### 16. `keep-alive` 缓存组件
 
-`<keep-alive include/exclude/max>`；`activated/deactivated` 钩子；缓存的是 VNode 不是 DOM。
+```vue
+<keep-alive include="Home,About" :max="10">
+  <router-view />
+</keep-alive>
+```
+
+- **include/exclude**：字符串或正则，匹配组件 `name`；
+- **max**：超出 LRU 淘汰最久未访问的；
+- 缓存的是**组件实例（VNode 树）**，不是 DOM 本身；
+- 再次进入走 `activated`，离开走 `deactivated`，而非 mounted/destroyed。
+
+**缓存后如何刷新数据：** 在 `activated` 里重新请求；或用 `:key="route.fullPath"` 强制不同路由参数重建组件。
+
+---
 
 ### 17. slot 插槽
 
-默认插槽、具名插槽、`v-slot`、作用域插槽（子传数据给父模板）。
+```vue
+<!-- 默认插槽 -->
+<Card>内容</Card>
+
+<!-- 具名插槽 -->
+<Layout>
+  <template #header>标题</template>
+  <template #footer>底部</template>
+</Layout>
+
+<!-- 作用域插槽：子组件把数据传给父组件的模板 -->
+<List v-slot="{ item }">
+  {{ item.name }}
+</List>
+```
+
+作用域插槽本质是：**父组件定义渲染逻辑，子组件提供数据**（如 Table 的 column 自定义单元格）。
+
+---
 
 ### 18. mixin 理解与应用
 
-选项合并；混入生命周期都会执行；缺点：命名冲突、来源不清晰；Vue3 推荐 composables。
+mixin 把可复用选项（data、methods、生命周期）混入组件。
+
+**缺点：**
+- 多个 mixin 时**命名冲突**、来源不清晰；
+- 生命周期钩子会**全部执行**，顺序：mixins 先于组件；
+- TS 推导差。
+
+Vue 3 推荐用 **Composables（组合式函数）** 替代 mixin，逻辑按功能组织、来源明确。
+
+---
 
 ### 19. 自定义指令
 
-`Vue.directive('focus', { inserted(el) { el.focus() } })`；DOM 操作类场景。
+```js
+Vue.directive('focus', {
+  inserted(el) { el.focus(); },      // 元素插入 DOM 时
+  update(el, binding) { /* 值更新 */ }
+});
+```
+
+**应用场景：** DOM 聚焦、权限按钮隐藏、图片懒加载 `v-lazy`、拖拽。逻辑偏 DOM 操作、不适合放 template 时用指令。
+
+---
 
 ### 20. 修饰符
 
-`.stop/.prevent/.capture/.self/.once`；按键 `.enter`；表单 `.lazy/.number/.trim`。
+**事件：** `.stop` 阻止冒泡、`.prevent` 阻止默认、`.once` 只触发一次、`.capture` 捕获阶段；
+
+**按键：** `.enter`、`.esc`、`.ctrl.s`；
+
+**表单：** `.lazy`（change 时更新）、`.number`、`.trim`；
+
+**v-model：** `.lazy`、`.number`、`.trim`。
+
+---
 
 ### 21. SPA 首屏慢怎么优化？
 
-路由懒加载、骨架屏、CDN、Gzip、SSR/预渲染、减小 bundle、图片优化。
+1. **路由懒加载**：`() => import('./views/Home.vue')`，首屏只加载当前页；
+2. **拆 vendor**：把 vue、lodash 等打独立 chunk，长期缓存；
+3. **CDN + Gzip/Brotli**；
+4. **图片**：WebP、懒加载、雪碧图/图标字体 → SVG；
+5. **骨架屏**：感知速度提升；
+6. **SSR/SSG/预渲染**：Nuxt、vite-plugin-ssr；
+7. **preload/prefetch** 关键资源；
+8. **Tree-shaking** 去掉未用代码。
+
+---
 
 ### 22. Vue 项目封装 axios
 
-实例 + 拦截器（Token、错误统一处理）；取消重复请求；类型封装。
+```js
+const service = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE,
+  timeout: 15000,
+});
+
+// 请求拦截：挂 Token
+service.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// 响应拦截：统一错误码
+service.interceptors.response.use(
+  res => res.data.code === 0 ? res.data.data : Promise.reject(res.data),
+  err => {
+    if (err.response?.status === 401) router.push('/login');
+    return Promise.reject(err);
+  }
+);
+```
+
+**进阶：** 取消重复请求（AbortController）、请求重试、上传进度、TypeScript 封装返回类型。
+
+---
 
 ### 23. Vue 权限管理（路由 + 按钮）
 
-路由：`meta.roles` + 全局守卫；按钮：`v-permission` 自定义指令 + 权限列表。
+**路由级：**
+
+```js
+router.beforeEach((to, from, next) => {
+  const roles = store.user.roles;
+  if (to.meta.roles && !to.meta.roles.some(r => roles.includes(r))) {
+    next('/403');
+  } else {
+    next();
+  }
+});
+```
+
+**按钮级：** 自定义指令 `v-permission="['admin']"`，挂载时查权限数组决定 `display: none` 或移除节点。权限数据来自登录接口，存 Pinia。
+
+---
 
 ### 24. Vue 项目跨域
 
-开发：`devServer.proxy`；生产：Nginx 反向代理；CORS 后端配置。
+**开发环境：** `vite.config.ts` / `vue.config.js` 配置 proxy 转发到后端，浏览器认为同源。
+
+**生产环境：** Nginx 反向代理 `/api` → 后端；或后端配置 CORS 响应头 `Access-Control-Allow-Origin`。
+
+跨域是**浏览器的同源策略**，服务端之间通信不存在跨域。
+
+---
 
 ### 25. 部署后刷新 404
 
-history 模式需服务器 fallback 到 `index.html`；Nginx `try_files $uri /index.html`。
+history 模式下，用户直接访问 `/about` 或刷新时，Nginx 会去磁盘找 `/about` 文件，不存在就 404。
+
+**Nginx 配置：**
+
+```nginx
+location / {
+  try_files $uri $uri/ /index.html;
+}
+```
+
+所有路径 fallback 到 `index.html`，再由前端路由接管。
+
+---
 
 ### 26. Vue 错误处理
 
-`errorCaptured`、全局 `Vue.config.errorHandler`、axios 拦截、Sentry 上报。
+- **`errorCaptured`**：捕获子组件错误，可阻止向上传播；
+- **全局 `Vue.config.errorHandler`**：未捕获错误的兜底；
+- **axios 拦截器**：接口层统一 toast；
+- **Sentry / 自建上报**：生产环境收集 stack、用户信息、路由。
+
+---
 
 ### 27. 组件 vs 插件
 
-组件 UI 单元；插件 `Vue.use()` 扩展全局功能（Router、Vuex、UI 库）。
+- **组件**：UI 单元，在 template 里用标签；
+- **插件**：通过 `Vue.use(Plugin)` 扩展全局能力，如 Vue Router（注册 `$router`）、Vuex、Element Plus。插件可注入全局方法、指令、组件、混入。
+
+---
 
 ### 28. 过滤器（Vue 3 已移除）
 
-纯函数格式化展示；Vue 3 用 computed / 方法替代。
+Vue 2 的 `{{ price | currency }}` 纯展示格式化。Vue 3 移除后改用 **computed** 或 **methods**，或直接在工具函数里格式化。
+
+---
 
 ### 29. 大型 Vue 项目目录结构
 
-`views/components/api/store/router/utils/assets`；按业务域拆分；公共组件抽离。
+```
+src/
+  api/          # 接口封装，按模块分文件
+  assets/       # 静态资源
+  components/   # 通用组件（Button、Modal）
+  composables/  # 组合式函数（Vue 3）
+  layouts/      # 布局壳
+  router/
+  stores/       # Pinia
+  utils/
+  views/        # 页面级组件，按业务域分子目录
+```
 
-### 30. Vue 2 vs Vue 3 核心区别（过渡题）
+**原则：** 页面组件放 views，可复用放 components；业务逻辑抽 composables；避免「万能 components 文件夹」堆几千个文件。
 
-Proxy 响应式、Composition API、Fragment/Teleport/Suspense、移除 filter/EventBus、性能与 tree-shaking。
+---
+
+### 30. Vue 2 vs Vue 3 核心区别
+
+| 维度 | Vue 2 | Vue 3 |
+|------|-------|-------|
+| 响应式 | defineProperty | Proxy |
+| API 风格 | Options API | Options + Composition API |
+| 根节点 | 单根 | 多根（Fragment） |
+| 新特性 | — | Teleport、Suspense |
+| 移除 | — | filter、$on/$off、$children |
+| 性能 | — | 编译优化 patchFlag、tree-shaking |
+| TS | 一般 | 原生友好 |
+
+**迁移要点：** `@vue/compat` 兼容模式、`Vue.set` 不再需要、EventBus 改 mitt、全局 API 改为 app 实例方法（`app.use`）。
 
 ---
 
 ## 七、Vue 3 篇（15 题）
 
-> Vue 3 是当前主流，Composition API 与性能优化是重点。
+> Vue 3 是当前主流，Composition API、Proxy 响应式与编译优化是面试重点。建议结合 Pinia + `<script setup>` 回答。
 
 ### 1. Vue 3 设计目标与优化
 
-更小更快、TS 友好、Composition API、模块化（按需引入）、Proxy 响应式。
+**设计目标：**
+- **更小**：核心 runtime 体积下降，API 可按需 import（tree-shaking）；
+- **更快**：Proxy 响应式 + 编译期静态分析（patchFlag、Block Tree）减少运行时 diff 量；
+- **更易维护**：Composition API 让相关逻辑聚合，替代 mixin；
+- **TypeScript 一等公民**：`defineProps`、`defineEmits` 等编译宏原生支持类型推导。
 
-### 2. 性能提升体现
-
-Proxy 替代 defineProperty、静态标记 patchFlag、Block Tree、编译优化（hoistStatic）、tree-shaking。
-
-### 3. 为什么用 Proxy 替代 defineProperty？
-
-可监听新增/删除属性、数组索引、Map/Set；lazy getter；性能更好；API 更简洁。
-
-### 4. Composition API vs Options API
-
-逻辑按功能组织 vs 按选项组织；复用 composables vs mixins；更好的 TS 推导；`setup` 执行时机在 beforeCreate 之前。
-
-### 5. `setup` 函数要点
-
-无 `this`；返回对象/template 可用数据；异步 setup 需 `<Suspense>`；生命周期用 `onMounted` 等。
-
-### 6. `ref` vs `reactive`
-
-`ref` 包装基本类型，`.value` 访问；`reactive` 对象代理；解构 reactive 会丢失响应式 → `toRefs`。
-
-### 7. `watch` vs `watchEffect`
-
-watch 需指定源；watchEffect 自动收集依赖，立即执行；`watchPostEffect` / flush 时机。
-
-### 8. Vue 3 Tree-shaking
-
-按需引入 API（`import { ref } from 'vue'`）；未使用代码打包时移除。
-
-### 9. `defineComponent` / `defineProps` / `defineEmits`
-
-`<script setup>` 编译宏；类型推导；运行时零开销。
-
-### 10. Pinia vs Vuex
-
-Pinia 无 mutations、TS 友好、模块化更简单、支持 Vue 2/3；Vuex 4 兼容 Vue 3。
-
-### 11. Teleport / Suspense / Fragment
-
-Teleport 传送 DOM；Suspense 异步组件加载；Fragment 多根节点。
-
-### 12. Vue 3 自定义 Hook（Composable）
-
-抽离响应式逻辑，如 `useMouse`、`useFetch`；注意依赖注入与 SSR 水合。
-
-### 13. 实现 Modal 组件设计思路
-
-`Teleport` 到 body；遮罩 + 内容区；`v-model:visible`；focus trap；ESC 关闭；滚动锁定。
-
-### 14. Vue 3 SSR（Vite SSR / Nuxt）
-
-服务端 renderToString → 客户端 hydrate；注意状态同步、只读数据、生命周期差异。
-
-### 15. Vue 3 + TypeScript 实践
-
-`<script setup lang="ts">`；props/emits 类型；组件实例类型 `InstanceType<typeof Comp>`。
+**和 Vue 2 的体感差异：** 多根节点、Teleport、Suspense、移除 filter/EventBus、全局 API 改为 `createApp`。
 
 ---
 
-## 八、React 篇（30 题）
+### 2. 性能提升体现在哪里？
 
-> React 面试侧重 Fiber、Hooks、状态管理与性能优化。
+| 优化点 | 说明 |
+|--------|------|
+| Proxy 响应式 | 惰性监听，大对象初始化更快 |
+| patchFlag | 编译时标记动态节点，diff 时跳过静态子树 |
+| Block Tree | 动态节点收集到固定数组，O(1) 定位 |
+| hoistStatic | 静态 VNode 提升，只创建一次 |
+| tree-shaking | 未使用的 API 不打包 |
+
+**面试话术：** 「Vue 3 不是单纯换 Proxy，而是**编译 + 运行时协同优化**，静态内容几乎不参与 diff。」
+
+---
+
+### 3. 为什么用 Proxy 替代 defineProperty？
+
+```js
+const obj = { a: 1 };
+const p = new Proxy(obj, {
+  get(target, key) { track(target, key); return Reflect.get(target, key); },
+  set(target, key, val) { Reflect.set(target, key, val); trigger(target, key); return true; }
+});
+p.b = 2; // 新增属性也能监听
+```
+
+**Proxy 优势：**
+- 监听**增删属性**、数组**索引/length**、Map/Set；
+- 按 key **惰性**代理，不必递归遍历整个对象；
+- API 统一，无需 `Vue.set`。
+
+**注意：** Proxy 无法代理原始值，所以 `ref` 用 `{ value }` 对象包装基本类型。
+
+---
+
+### 4. Composition API vs Options API
+
+**Options API：** `data/methods/computed/watch` 按选项类型分散，复杂组件里「同一功能的代码」被拆到不同块。
+
+**Composition API：** 在 `setup` 或 `<script setup>` 里按**功能**组织：
+
+```vue
+<script setup>
+import { useUser } from '@/composables/useUser';
+import { useList } from '@/composables/useList';
+const { user, fetchUser } = useUser();
+const { list, loadMore } = useList();
+</script>
+```
+
+**对比 mixin：** composable 来源清晰、无命名冲突、TS 友好。Options API 仍可用，小组件或 legacy 项目可继续。
+
+**`setup` 执行时机：** 在 `beforeCreate` 之前，此时无 `this`，需显式解构 props。
+
+---
+
+### 5. `setup` 函数要点
+
+```js
+export default {
+  props: { id: Number },
+  setup(props, { emit, slots, attrs, expose }) {
+    // 无 this
+    onMounted(() => { /* ... */ });
+    return { /* 暴露给 template */ };
+  }
+};
+```
+
+- **返回值**：对象或 render 函数；`<script setup>` 顶层变量自动暴露；
+- **异步 setup**：需外层 `<Suspense>` 包裹，否则无法正确挂载；
+- **`expose`**：显式暴露给父组件 `$refs` 的方法（`<script setup>` 默认封闭）。
+
+---
+
+### 6. `ref` vs `reactive`
+
+```js
+const count = ref(0);        // 基本类型，template 自动解包 .value
+const state = reactive({ n: 1 }); // 对象代理
+
+// 解构丢失响应式
+const { n } = state; // n 不是响应式
+const { n } = toRefs(state); // n 是 ref，保持响应式
+```
+
+**选型建议：** 基本类型用 `ref`；复杂对象用 `reactive`；需要替换整个对象时用 `ref({})` 更方便（`state.value = newObj`）。
+
+---
+
+### 7. `watch` vs `watchEffect`
+
+```js
+watch(userId, (id) => fetchUser(id), { immediate: true });
+
+watchEffect(() => {
+  // 自动收集依赖，立即执行
+  document.title = user.value.name;
+});
+```
+
+| | watch | watchEffect |
+|---|-------|-------------|
+| 依赖 | 显式指定源 | 自动收集 |
+| 旧值 | 可拿到 | 无 |
+| 时机 | 默认 pre（DOM 更新前） | 同上，可 flush: 'post' |
+
+**`watchPostEffect`：** DOM 更新后执行，适合读布局。
+
+---
+
+### 8. Vue 3 Tree-shaking
+
+```js
+import { ref, computed } from 'vue'; // 只打包用到的 API
+```
+
+Vue 2 整包引入 `Vue` 对象，很多 API 即使用不到也会进 bundle。Vue 3 将 API **按函数导出**，配合 Rollup/Webpack 的 dead code elimination，生产包显著变小。
+
+---
+
+### 9. `defineComponent` / `defineProps` / `defineEmits`
+
+```vue
+<script setup lang="ts">
+const props = defineProps<{ id: number; title?: string }>();
+const emit = defineEmits<{ (e: 'save', payload: string): void }>();
+</script>
+```
+
+- 编译宏，**运行时零开销**（编译后消失）；
+- TS 下 props/emits 有完整类型；
+- `defineModel()`（3.4+）简化 `v-model` 双向绑定。
+
+---
+
+### 10. Pinia vs Vuex
+
+**Vuex：** state → mutations（同步）→ actions（异步）→ getters；模块 + 命名空间，样板代码多。
+
+**Pinia：**
+- **无 mutations**，直接改 state 或通过 action；
+- 按 store 文件拆分，TS 推导好；
+- 支持 Vue 2/3，DevTools 友好；
+- 无嵌套模块概念，每个 store 独立。
+
+```js
+export const useUserStore = defineStore('user', {
+  state: () => ({ name: '' }),
+  actions: { async login() { /* ... */ } },
+});
+```
+
+**项目选型：** 新项目直接 Pinia；Vuex 4 仅 legacy 维护。
+
+---
+
+### 11. Teleport / Suspense / Fragment
+
+**Teleport：** 把组件 DOM 渲染到指定容器（如 `body`），适合 Modal、Toast，避免 z-index 和 overflow 问题。
+
+```vue
+<Teleport to="body">
+  <div class="modal">...</div>
+</Teleport>
+```
+
+**Suspense：** 包裹异步组件，提供 `#default` 和 `#fallback` 插槽，配合 `async setup` 或异步组件。
+
+**Fragment：** 组件可有多个根节点，不再强制单根包裹 div。
+
+---
+
+### 12. 自定义 Composable 设计
+
+```js
+// composables/useFetch.js
+export function useFetch(url) {
+  const data = ref(null);
+  const loading = ref(false);
+  const error = ref(null);
+
+  async function execute() {
+    loading.value = true;
+    try {
+      data.value = await fetch(url).then(r => r.json());
+    } catch (e) {
+      error.value = e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  onMounted(execute);
+  return { data, loading, error, refetch: execute };
+}
+```
+
+**原则：** 以 `use` 开头；返回 ref/reactive + 方法；注意 SSR 时避免在 setup 外访问 window；可组合多个 composable。
+
+---
+
+### 13. Modal 组件设计思路
+
+1. **`Teleport to="body"`** 挂到 body，脱离父级 stacking context；
+2. **遮罩 + 内容区**，点击遮罩可选关闭；
+3. **`v-model:visible`** 或 `defineModel` 控制显隐；
+4. **focus trap**：打开时 focus 第一个可聚焦元素，Tab 循环在弹窗内；
+5. **ESC 关闭**、**滚动锁定**（`body { overflow: hidden }`）；
+6. **动画**：`<Transition name="fade">`；
+7. **可访问性**：`role="dialog"`、`aria-modal="true"`。
+
+---
+
+### 14. Vue 3 SSR（Vite SSR / Nuxt）
+
+**流程：** 服务端 `renderToString(app)` 生成 HTML 字符串 + 注入 state → 客户端 `createSSRApp` + `hydrate` 接管 DOM，绑定事件。
+
+**注意点：**
+- 避免在 setup 里直接访问 `window/document`（需 `onMounted` 或 `import.meta.env.SSR` 判断）；
+- 状态需序列化到 `window.__INITIAL_STATE__`，客户端 hydrate 前恢复；
+- 生命周期：`onMounted` 仅客户端执行，`onServerPrefetch` 服务端预取数据。
+
+**Nuxt 3：** 文件路由、自动 import、混合 SSR/SSG/ISR，生产首选。
+
+---
+
+### 15. Vue 3 + TypeScript 实践
+
+```vue
+<script setup lang="ts">
+import type { User } from '@/types';
+
+interface Props {
+  userId: number;
+}
+const props = defineProps<Props>();
+
+const user = ref<User | null>(null);
+
+// 组件实例类型
+import MyComp from './MyComp.vue';
+type MyCompInstance = InstanceType<typeof MyComp>;
+</script>
+```
+
+**要点：** 优先 `defineProps` 泛型写法；`ref<User>()` 显式泛型；模板中 props 自动解包；用 `vue-tsc` 做类型检查。
+
+---
+
+## 八、React 篇（45 题）
+
+> React 面试侧重 Fiber、Hooks、状态管理与性能优化。下面 30 道核心题 + 15 道补充题均展开作答。
 
 ### 1. 说说你对 React 的理解？
 
-UI 库，声明式、组件化、单向数据流；虚拟 DOM + diff；函数组件 + Hooks 为主流。
+React 是 Facebook 出品的 **UI 库**（不是完整框架），核心思想：
+
+- **声明式 UI**：描述「界面应该是什么样」，React 负责更新 DOM；
+- **组件化**：函数/类组件封装 UI + 逻辑，props 向下、事件向上；
+- **单向数据流**：数据从父到子，子组件通过回调通知父组件改 state；
+- **虚拟 DOM + diff**：内存中比较变更，批量提交到真实 DOM；
+- **Learn once, write anywhere**：React Native、React DOM 共用组件思想。
+
+**生态：** 路由（React Router）、状态（Redux/Zustand）、元框架（Next.js）需自行组合。
+
+---
 
 ### 2. Real DOM vs Virtual DOM
 
-VDOM 是 JS 对象描述 UI；批量 diff 更新；权衡可维护性与性能下限，非绝对更快。
+**Real DOM：** 浏览器原生节点，增删改查代价高，频繁操作触发回流重绘。
+
+**Virtual DOM：** 用普通 JS 对象描述节点结构（type、props、children），变更时在内存 diff，再**最小化** patch 到真实 DOM。
+
+**误区：** VDOM 不是总比直接操作 DOM 快；简单场景手动 DOM 可能更快。VDOM 的价值是**开发效率**、**跨平台**和**可预测的更新模型**。
+
+---
 
 ### 3. React 生命周期（类组件）
 
-挂载：`constructor → render → componentDidMount`；更新：`render → componentDidUpdate`；卸载：`componentWillUnmount`；错误：`componentDidCatch`。
+**挂载：** `constructor` → `static getDerivedStateFromProps` → `render` → `componentDidMount`
+
+**更新：** `getDerivedStateFromProps` → `shouldComponentUpdate` → `render` → `getSnapshotBeforeUpdate` → `componentDidUpdate`
+
+**卸载：** `componentWillUnmount`
+
+**错误：** `static getDerivedStateFromError` → `componentDidCatch`
+
+**常用场景：**
+- `componentDidMount`：请求数据、订阅、第三方库初始化；
+- `componentDidUpdate`：props 变化后同步 DOM 或发请求（需比较 prevProps）；
+- `componentWillUnmount`：清定时器、取消订阅。
+
+---
 
 ### 4. 函数组件生命周期对应
 
-`useEffect(() => { mount/update; return unmount }, [deps])`；空 deps 仅 mount+unmount。
+```jsx
+useEffect(() => {
+  // 相当于 componentDidMount + componentDidUpdate（deps 变化时）
+  fetchData();
+  return () => {
+    // 相当于 componentWillUnmount
+    cleanup();
+  };
+}, [userId]); // deps 为空 [] 则仅 mount/unmount
+```
+
+**对应关系：**
+- 仅挂载：`useEffect(fn, [])`
+- 挂载 + 更新：`useEffect(fn, [deps])`
+- 卸载 cleanup：`return () => {}`
+- 布局相关、需同步读 DOM：`useLayoutEffect`
+
+---
 
 ### 5. `state` vs `props`
 
-props 父传子只读；state 组件内部可变；都不可直接修改，需 setState / 新对象。
+| | props | state |
+|---|-------|-------|
+| 来源 | 父组件传入 | 组件内部 |
+| 可变性 | 只读，子不能改 | 通过 setState 更新 |
+| 用途 | 配置、数据下发 | 交互、私有状态 |
+
+**不可变更新：** `setState({ ...state, count: state.count + 1 })` 或函数式 `setCount(c => c + 1)`，不要直接 mutate。
+
+---
 
 ### 6. `setState` 是同步还是异步？
 
-React 18 自动批处理；合成事件/setTimeout 内也可能批量；`flushSync` 强制同步。
+**React 18 起自动批处理（Automatic Batching）：** 同一事件循环内的多次 setState 会合并为一次 render，包括 setTimeout、Promise、原生事件中的更新。
+
+```jsx
+// React 18：三次 setState 只 render 一次
+setTimeout(() => {
+  setCount(c => c + 1);
+  setFlag(f => !f);
+}, 0);
+```
+
+**需要立即读 DOM 时：** 使用 `flushSync(() => setState(...))` 强制同步提交。
+
+**类组件：** 合成事件内 historically 异步，原生事件同步；18 后统一批处理。
+
+---
 
 ### 7. `super()` 和 `super(props)` 区别
 
-后者先初始化 props，constructor 里可访问 `this.props`。
+类组件 constructor 中必须先 `super(props)` 再访问 `this`。
 
-### 8. React 事件机制
+若只写 `super()` 而不传 props，在 constructor 里 `this.props` 可能尚未赋值（React 内部优化导致）。传 `super(props)` 可确保 constructor 内能正确读到 props。
 
-合成事件（SyntheticEvent）委托到 root；池化（React 17+ 取消）；与原生事件冒泡顺序：原生 → React → 原生。
+---
+
+### 8. React 事件机制（合成事件）
+
+React 17+ 将事件委托到 **root 容器**（不再是 document），减少多 React 实例冲突。
+
+**SyntheticEvent：** 跨浏览器包装，统一 API；React 17+ **取消事件池**，可异步访问 event。
+
+**与原生事件顺序：** 目标阶段原生 → React 合成 → 冒泡阶段原生。`e.nativeEvent` 可拿原生事件。
+
+**`stopPropagation`：** 阻止 React 合成事件冒泡，不一定阻止已绑定的原生监听器。
+
+---
 
 ### 9. 事件绑定方式
 
-JSX `onClick`；类组件需 bind 或 class fields；避免 render 里 bind 产生新函数。
+```jsx
+// 推荐：函数组件直接箭头函数或引用稳定函数
+<button onClick={handleClick}>点我</button>
+
+// 类组件：constructor 里 bind 或 class fields
+class Btn extends React.Component {
+  handleClick = () => { /* this 已绑定 */ };
+}
+```
+
+**避免：** 在 render 里 `onClick={() => this.foo()}` 每次创建新函数，若子组件用 `React.memo` 会导致无效 props 变化。
+
+---
 
 ### 10. 组件构建方式
 
-函数组件（推荐）、类组件；高阶组件 HOC、Render Props（旧模式）。
+- **函数组件 + Hooks**（主流）：简洁、易测试、无 this；
+- **类组件**：legacy、Error Boundary（也可用库）；
+- **HOC**：`withRouter(withAuth(Component))`，增强 props；
+- **Render Props**：`<DataProvider render={data => <UI data={data} />}>`，逻辑共享（现多被 Hook 替代）。
+
+---
 
 ### 11. React 组件通信
 
-props 回调、Context、Redux/Zustand/Jotai、组合 children、全局 EventEmitter（少用）。
+1. **props + 回调**：父传子数据，子 `onChange` 通知父；
+2. **Context**：主题、语言、登录用户，避免 props drilling；
+3. **全局状态**：Redux / Zustand / Jotai；
+4. **组合**：children、`render props` 插槽式扩展；
+5. **ref 命令式**：`forwardRef` + `useImperativeHandle` 暴露方法；
+6. **EventEmitter**（少用）：跨树非父子通信，难维护。
+
+---
 
 ### 12. `key` 的作用
 
-diff 标识；index 作 key 在重排增删时状态错乱；稳定唯一 id。
+Reconciliation 时，**同一层级**列表项通过 key 判断是否复用 Fiber 节点。
+
+**index 作 key 的问题：** 在列表头部插入一项，后面所有 index 变，React 会错误复用 DOM，导致输入框内容错位、动画异常。
+
+**正确做法：** 使用数据库 id 等稳定唯一值。
+
+---
 
 ### 13. refs 理解与应用
 
-`useRef` 持久化可变值、访问 DOM、保存上一值；`forwardRef` 转发 ref。
+```jsx
+const inputRef = useRef(null);
+const countRef = useRef(0); // 也可存可变值，改 .current 不触发 render
+
+useEffect(() => { inputRef.current?.focus(); }, []);
+
+// 转发 ref 给子组件 DOM
+const Input = forwardRef((props, ref) => <input ref={ref} {...props} />);
+```
+
+**场景：** 聚焦、测量尺寸、集成非 React 库（D3、地图）、保存定时器 id、存「上一帧 props」。
+
+---
 
 ### 14. 类组件 vs 函数组件
 
-函数 + Hooks 更简洁、易测试、无 this；类组件仍有 Error Boundary（函数可用 react-error-boundary）。
+| | 类组件 | 函数组件 |
+|---|--------|----------|
+| 状态 | this.state | useState/useReducer |
+| 生命周期 | 生命周期方法 | useEffect |
+| this | 需绑定 | 无 |
+| 逻辑复用 | HOC/mixin | 自定义 Hook |
+| 性能 | 手动 shouldComponentUpdate | memo + hooks |
+
+**结论：** 新项目函数组件；类组件仅维护 legacy 或特定 API（如部分 Error Boundary 写法）。
+
+---
 
 ### 15. 受控 vs 非受控组件
 
-受控：value 由 state 控制；非受控：DOM 自身管理，ref 取值；表单推荐受控。
+**受控：** `<input value={text} onChange={e => setText(e.target.value)} />`，React state 为唯一数据源，便于校验、联动。
+
+**非受控：** `<input defaultValue="x" ref={ref} />`，DOM 自己管值，提交时用 `ref.current.value` 读取。
+
+**推荐：** 表单以受控为主；文件上传 `<input type="file">` 通常非受控。
+
+---
 
 ### 16. 高阶组件 HOC
 
-`const Enhanced = withX(Wrapped)`；注意 displayName、ref 转发、不要 render 里创建 HOC。
+```jsx
+function withAuth(Wrapped) {
+  return function AuthComponent(props) {
+    const user = useAuth();
+    if (!user) return <Redirect to="/login" />;
+    return <Wrapped {...props} user={user} />;
+  };
+}
+```
+
+**注意：**
+- 不要在内层 render 里动态创建 HOC（会 remount）；
+- 设置 `displayName` 方便调试；
+- ref 需 `forwardRef` 透传；
+- 多个 HOC 嵌套导致 props 来源难追踪 → 现多用 Hook。
+
+---
 
 ### 17. React Hooks 解决了什么问题？
 
-类组件逻辑难复用、生命周期割裂、this 问题；Hooks 按功能组织、自定义 Hook 复用。
+类组件痛点：
+- **逻辑难复用**：HOC/render props 嵌套地狱；
+- **生命周期割裂**：同一业务分散在 mount/update/unmount；
+- **this 绑定**、**巨型组件**难维护。
+
+Hooks 让**相关逻辑聚合**在自定义 Hook 里，函数组件拥有完整能力。
+
+---
 
 ### 18. Hooks 规则与原理
 
-仅顶层调用；Fiber 链表存 hook 状态，顺序不能变；`useState/useEffect/useMemo/useCallback/useRef/useContext/useReducer`。
+**规则：**
+1. 只在**顶层**调用，不在 if/for 里；
+2. 只在 **React 函数**或自定义 Hook 里调用。
+
+**原理：** Fiber 节点上有 `memoizedState` 链表，每次 render 按**固定顺序**读取 hook 槽位。顺序变了，state 就错位。
+
+**常用 Hooks：** `useState`、`useEffect`、`useLayoutEffect`、`useMemo`、`useCallback`、`useRef`、`useContext`、`useReducer`、`useId`。
+
+---
 
 ### 19. `useEffect` vs `useLayoutEffect`
 
-Effect 异步 paint 后；LayoutEffect 同步 paint 前，适合测量 DOM、防闪烁。
+| | useEffect | useLayoutEffect |
+|---|-----------|-----------------|
+| 执行时机 | paint **之后**（异步） | paint **之前**（同步） |
+| 阻塞绘制 | 否 | 是 |
+| 场景 | 数据请求、订阅 | 测量 DOM、同步改 DOM 防闪 |
+
+大多数副作用用 `useEffect`；只有「用户会看到闪烁」时才用 `useLayoutEffect`。
+
+---
 
 ### 20. 闭包陷阱
 
-effect/定时器拿到旧 state；依赖写全、函数式更新、`useRef` 存最新值。
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCount(count + 1); // 永远 +1，count 卡在 0
+    }, 1000);
+    return () => clearInterval(id);
+  }, []); // deps 空，effect 闭包捕获初始 count
+}
+```
+
+**解决：**
+- 函数式更新：`setCount(c => c + 1)`；
+- deps 写全：`[count]`（会重建 interval）；
+- `useRef` 存最新值：`countRef.current = count`。
+
+---
 
 ### 21. `useMemo` / `useCallback`
 
-缓存计算结果 / 函数引用；配合 `React.memo` 避免子组件无效 render；不要过度优化。
+```jsx
+const sorted = useMemo(() => heavySort(list), [list]);
+const handleClick = useCallback(() => onSave(id), [id, onSave]);
+
+const Child = React.memo(({ onClick }) => <button onClick={onClick} />);
+```
+
+- **useMemo**：缓存**计算结果**；
+- **useCallback**：缓存**函数引用**，配合 `React.memo` 避免子组件因 props 引用变而重渲染。
+
+**不要滥用：** 缓存本身有成本，只有子组件确实 memo、或计算确实很重时才用。
+
+---
 
 ### 22. React 引入 CSS 方式
 
-CSS Modules、CSS-in-JS（styled-components）、Tailwind、全局 CSS；CSS Modules 作用域隔离。
+| 方式 | 特点 |
+|------|------|
+| 全局 CSS | 简单，易冲突 |
+| CSS Modules | `.module.css`，编译时局部类名 |
+| CSS-in-JS | styled-components、Emotion，动态样式、主题 |
+| Tailwind | 原子类，构建时 purge |
+| CSS Modules + Sass | 中大型项目常见 |
+
+**选型：** 团队规范优先；CSS-in-JS 注意 runtime 成本（可选 zero-runtime 方案如 Linaria）。
+
+---
 
 ### 23. React 过渡动画
 
-`react-transition-group`、Framer Motion、CSS transition + 条件渲染。
+- **CSS Transition**：条件渲染 + `className` 切换；
+- **react-transition-group**：`CSSTransition`、`TransitionGroup` 管理 enter/exit 类名；
+- **Framer Motion**：声明式 `animate`、`layout` 动画，API 友好。
+
+列表动画注意 **key 稳定**，否则 exit 动画错乱。
+
+---
 
 ### 24. Redux 理解与工作原理
 
-单一 store、reducer 纯函数、dispatch action → 新 state；单向数据流。
+**三大原则：** 单一数据源（store）、state 只读（通过 action 改）、reducer 纯函数。
+
+```
+UI → dispatch(action) → reducer(state, action) → new state → 订阅者 re-render
+```
+
+```js
+const store = configureStore({
+  reducer: { counter: counterReducer },
+});
+store.dispatch(increment());
+```
+
+**适用：** 多页面共享复杂状态、需要时间旅行调试、中间件生态（日志、saga）。
+
+---
 
 ### 25. Redux 中间件
 
-redux-thunk（异步）、redux-saga（generator）、redux-observable；洋葱模型。
+**redux-thunk：** action 可以是函数 `(dispatch, getState) => {}`，适合简单异步。
+
+**redux-saga：** Generator 描述复杂流程（取消、竞态、takeEvery）。
+
+**洋葱模型：** `dispatch` 经过 middleware 链，每层可拦截、异步、再 `next(action)`。
+
+**现代替代：** RTK（Redux Toolkit）内置 Immer、`createAsyncThunk`，减少样板代码。
+
+---
 
 ### 26. React Router 理解与模式
 
-BrowserRouter / HashRouter；`useNavigate/useParams/useLocation`；路由守卫用 wrapper 组件。
+- **BrowserRouter**：`history` API，URL 美观，需服务端 fallback；
+- **HashRouter**：`#/path`，无需服务端配置。
+
+**Hooks：** `useNavigate` 编程式跳转、`useParams` 读动态段、`useLocation` 读 query state、`useSearchParams` 读查询串。
+
+**路由守卫：** 包装 `<ProtectedRoute>`，未登录 redirect；或 loader（React Router 6.4+ data API）。
+
+---
 
 ### 27. React diff 原理
 
-同层比较；type/key 不同替换；单节点 vs 多节点 diff；key 优化列表移动。
+**三个假设：** 树层级 diff、同层比较、key 标识复用。
+
+**单节点：** type 不同直接替换整棵子树；相同则更新 props。
+
+**多节点（列表）：** 第一轮头尾指针；无法匹配时用 key map；Vue 3 / React 都用 key 优化**移动**而非销毁重建。
+
+---
 
 ### 28. Fiber 架构解决了什么？
 
-可中断渲染、优先级调度、时间切片；reconciliation 与 commit 两阶段；为 Concurrent Mode 铺路。
+**问题：** 旧 reconciler 递归不可中断，大更新长时间占主线程，动画、输入卡顿。
+
+**Fiber：** 把更新拆成**工作单元**，可中断、可恢复、可优先级调度（Concurrent Mode）。
+
+**两阶段：**
+- **Render（可中断）：** 构建 Fiber 树，标记副作用；
+- **Commit（不可中断）：** 一次性提交 DOM 变更。
+
+**时间切片：** 每帧空闲时做一点 work，让出主线程给浏览器绘制。
+
+---
 
 ### 29. JSX 转真实 DOM 过程
 
-JSX → `React.createElement` → VDOM 对象 → Fiber 构建 → diff → commit 操作 DOM。
+```
+JSX
+  ↓ Babel
+React.createElement(type, props, ...children)
+  ↓
+VDOM 对象 { type, props, key, ref }
+  ↓
+Fiber 架构构建 Fiber 树（双缓存 current / workInProgress）
+  ↓
+diff 标记 Placement / Update / Deletion
+  ↓
+Commit 阶段：appendChild、setAttribute、removeChild
+```
+
+**React 17+：** 新 JSX Transform 自动 import jsx runtime，无需显式 React in scope。
+
+---
 
 ### 30. React 性能优化手段
 
-`React.memo`、useMemo/useCallback、懒加载 `React.lazy + Suspense`、虚拟列表、避免 Context 大范围更新、Profiler 分析。
+1. **`React.memo`**：props 浅比较跳过重渲染；
+2. **useMemo / useCallback**：稳定引用；
+3. **代码分割**：`React.lazy(() => import('./Page'))` + `<Suspense fallback={...}>`；
+4. **虚拟列表**：react-window、virtuoso，只渲染可视区；
+5. **Context 拆分**：避免大 Context 变更导致全树更新；
+6. **状态下沉 / 状态下放**：只让需要的子树订阅；
+7. **Profiler + DevTools**：找慢组件；
+8. **并发特性**：`useTransition` 标记低优先级更新、`useDeferredValue` 延迟展示。
 
-### React 补充速览（15 题）
+---
 
-| 题 | 要点 |
-|----|------|
-| immutable.js | 不可变数据，深比较优化 shouldComponentUpdate |
-| 错误边界 | `componentDidCatch` / `getDerivedStateFromError` |
-| React SSR | `renderToString` + hydrate；Next.js |
-| RSC（Server Components） | 服务端组件无 bundle、零客户端 JS |
-| 状态管理选型 | 局部 useState → Context → Zustand/Redux |
-| 表单库 | React Hook Form、Formik |
-| 测试 | React Testing Library、Jest |
-| Strict Mode | 双调用检测副作用（dev） |
-| Portal | `createPortal` 渲染到 DOM 外层 |
-| 自定义 Hook 设计 | 以 use 开头，可组合 |
-| 并发特性 | useTransition、useDeferredValue |
-| 代码分割 | dynamic import + Suspense fallback |
-| 为什么列表要 key | 复用 DOM、保留焦点与内部 state |
-| 受控输入中文输入法 | composition 事件与 React 合成事件 |
-| 项目错误捕获 | Error Boundary + 全局 window.onerror + Sentry |
+### 31. immutable.js 与不可变数据
+
+Redux 要求 reducer 不 mutate state。`immutable.js` 提供持久化数据结构，结构共享 + 深比较 cheap。
+
+现代更常用 **Immer**（RTK 内置）：写「看起来可变」的代码，产出不可变新 state。
+
+---
+
+### 32. 错误边界（Error Boundary）
+
+```jsx
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err, info) { logToService(err, info); }
+  render() {
+    return this.state.hasError ? <Fallback /> : this.props.children;
+  }
+}
+```
+
+**仅能捕获：** 子树 render/lifecycle 错误，**不能**捕获事件处理器、异步、SSR 中的错误。函数组件可用 `react-error-boundary` 库。
+
+---
+
+### 33. React SSR 与 Next.js
+
+服务端 `renderToString` / `renderToPipeableStream` 输出 HTML → 客户端 `hydrateRoot` 复用 DOM 并绑定事件。
+
+**Next.js App Router：** Server Components 默认服务端、Client Components `'use client'`；流式 SSR、静态生成、ISR 一体。
+
+---
+
+### 34. RSC（React Server Components）
+
+服务端组件：**不打包进客户端 JS**，可直接读 DB、文件系统；通过 Flight 协议序列化结果给客户端。
+
+客户端组件负责交互。减少 bundle、缩短 TTI，但心智模型更复杂。
+
+---
+
+### 35. 状态管理选型
+
+- **组件内** `useState` / `useReducer`；
+- **跨几层** Context + useReducer；
+- **全局中等复杂度** Zustand（简单）或 RTK；
+- **大型、强约束** Redux + RTK + saga/thunk。
+
+原则：**能用局部 state 就不用全局**；全局 state 按领域拆 slice。
+
+---
+
+### 36. 表单库：React Hook Form vs Formik
+
+**React Hook Form：** 非受控为主 + ref 注册，重渲染少，性能好，TS 友好。
+
+**Formik：** 受控模式，API 直观，适合中小型表单。
+
+---
+
+### 37. 测试：React Testing Library
+
+**理念：** 测用户行为，不测实现细节。`render` → `screen.getByRole` → `userEvent.click` → `expect`。
+
+配合 Jest / Vitest；Mock 网络用 MSW。
+
+---
+
+### 38. Strict Mode 双调用
+
+开发模式下 React 18 Strict Mode 会**故意双 mount** effect，暴露缺少 cleanup 的副作用。生产环境不会。
+
+---
+
+### 39. Portal
+
+```jsx
+createPortal(<Modal />, document.body);
+```
+
+渲染到 DOM 树其他位置，事件仍按 React 树冒泡。用于 Modal、Tooltip、Dropdown。
+
+---
+
+### 40. 自定义 Hook 设计
+
+- 命名以 **`use`** 开头；
+- 可组合其他 Hook；
+- 返回 state + 操作方法；
+- 示例：`useDebounce`、`useLocalStorage`、`useInfiniteScroll`。
+
+---
+
+### 41. 并发特性：`useTransition` / `useDeferredValue`
+
+```jsx
+const [isPending, startTransition] = useTransition();
+startTransition(() => setTab('heavy')); // 低优先级，不阻塞输入
+
+const deferredQuery = useDeferredValue(query); // 延迟展示重列表
+```
+
+用于保持 UI 响应，重渲染可中断。
+
+---
+
+### 42. 代码分割实践
+
+路由级 lazy load；Next.js 自动按路由分割；Webpack magic comment `/* webpackChunkName: "admin" */` 命名 chunk。
+
+配合 Suspense fallback（骨架屏），preload  hover 时预加载。
+
+---
+
+### 43. 为什么列表必须要 key？
+
+除 diff 性能外，key 决定 Fiber **复用**哪棵子树，从而保留组件 **内部 state**（输入框内容、展开状态）和 **DOM 焦点**。
+
+---
+
+### 44. 受控输入与中文输入法（IME）
+
+composition 期间 React 16/17 曾有问题；React 18 已改进。若遇中文输入中间态被截断，检查是否在不当时机强制 value 覆盖，或监听 `onCompositionStart/End`。
+
+---
+
+### 45. 项目级错误捕获
+
+- **Error Boundary**：组件树渲染错误；
+- **window.onerror / unhandledrejection**：全局 JS/Promise 错误；
+- **Sentry / 自建上报**：source map、用户上下文、面包屑；
+- **接口层**：axios 拦截统一 toast + 上报 5xx。
 
 ---
 
@@ -728,68 +2016,371 @@ JSX → `React.createElement` → VDOM 对象 → Fiber 构建 → diff → comm
 
 ## 十、手写题篇（12 题）
 
+> 手写题要能说清**思路 + 边界 + 复杂度**。下面给出可背诵的完整实现与讲解。
+
 ### 1. 手写 Promise.all / race / allSettled
 
+**Promise.all：** 全部成功才 resolve 结果数组，任一 reject 则整体 reject。
+
 ```js
-function promiseAll(list) {
+function promiseAll(iterable) {
   return new Promise((resolve, reject) => {
-    const res = [];
-    let n = 0;
-    const arr = Array.from(list);
-    if (!arr.length) return resolve([]);
-    arr.forEach((p, i) =>
-      Promise.resolve(p).then((v) => {
-        res[i] = v;
-        if (++n === arr.length) resolve(res);
-      }, reject),
-    );
+    const arr = Array.from(iterable);
+    if (arr.length === 0) return resolve([]);
+    const results = new Array(arr.length);
+    let settled = 0;
+    arr.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (val) => {
+          results[i] = val;
+          if (++settled === arr.length) resolve(results);
+        },
+        reject // 任一失败立即 reject
+      );
+    });
   });
 }
 ```
 
+**Promise.race：** 第一个 settled（成功或失败）的结果决定整体。
+
+```js
+function promiseRace(iterable) {
+  return new Promise((resolve, reject) => {
+    for (const p of iterable) {
+      Promise.resolve(p).then(resolve, reject);
+    }
+  });
+}
+```
+
+**Promise.allSettled：** 等全部结束，返回 `{ status, value/reason }` 数组，永不 reject。
+
+```js
+function promiseAllSettled(iterable) {
+  return Promise.all(
+    Array.from(iterable).map((p) =>
+      Promise.resolve(p)
+        .then((value) => ({ status: 'fulfilled', value }))
+        .catch((reason) => ({ status: 'rejected', reason }))
+    )
+  );
+}
+```
+
+---
+
 ### 2. 手写 instanceof / call / bind
 
-见前文实现；bind 注意 `new` 时忽略绑定 this。
+**instanceof：**
+
+```js
+function myInstanceof(obj, Constructor) {
+  if (obj == null || typeof obj !== 'object' && typeof obj !== 'function') {
+    return false;
+  }
+  let proto = Object.getPrototypeOf(obj);
+  while (proto) {
+    if (proto === Constructor.prototype) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}
+```
+
+**call：**
+
+```js
+Function.prototype.myCall = function (context, ...args) {
+  context = context == null ? globalThis : Object(context);
+  const key = Symbol('fn');
+  context[key] = this;
+  const result = context[key](...args);
+  delete context[key];
+  return result;
+};
+```
+
+**bind（注意 new 场景）：**
+
+```js
+Function.prototype.myBind = function (context, ...boundArgs) {
+  const fn = this;
+  function bound(...args) {
+    // 作为构造函数时 this 指向新实例
+    const isNew = this instanceof bound;
+    return fn.apply(isNew ? this : context, [...boundArgs, ...args]);
+  }
+  bound.prototype = Object.create(fn.prototype);
+  return bound;
+};
+```
+
+---
 
 ### 3. 手写深拷贝
 
-递归 + WeakMap 处理循环引用 + 类型分支（Date/RegExp/Map/Set）。
+```js
+function deepClone(value, map = new WeakMap()) {
+  if (value === null || typeof value !== 'object') return value;
+  if (map.has(value)) return map.get(value); // 循环引用
+
+  if (value instanceof Date) return new Date(value);
+  if (value instanceof RegExp) return new RegExp(value);
+
+  if (value instanceof Map) {
+    const m = new Map();
+    map.set(value, m);
+    value.forEach((v, k) => m.set(deepClone(k, map), deepClone(v, map)));
+    return m;
+  }
+  if (value instanceof Set) {
+    const s = new Set();
+    map.set(value, s);
+    value.forEach((v) => s.add(deepClone(v, map)));
+    return s;
+  }
+
+  const clone = Array.isArray(value) ? [] : {};
+  map.set(value, clone);
+  for (const key of Reflect.ownKeys(value)) {
+    clone[key] = deepClone(value[key], map);
+  }
+  return clone;
+}
+```
+
+**边界：** Symbol 键、函数一般直接返回引用、原型链默认不拷贝（可按需 `Object.create` + 拷贝）。
+
+---
 
 ### 4. 手写防抖 / 节流
 
-见 JS 篇代码。
+```js
+function debounce(fn, wait, immediate = false) {
+  let timer;
+  return function (...args) {
+    const callNow = immediate && !timer;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      if (!immediate) fn.apply(this, args);
+    }, wait);
+    if (callNow) fn.apply(this, args);
+  };
+}
+
+function throttle(fn, interval) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last >= interval) {
+      last = now;
+      fn.apply(this, args);
+    }
+  };
+}
+```
+
+---
 
 ### 5. 手写 EventEmitter
 
-on/off/once/emit；Map + Set 存回调。
+```js
+class EventEmitter {
+  #events = new Map();
+
+  on(event, fn) {
+    if (!this.#events.has(event)) this.#events.set(event, new Set());
+    this.#events.get(event).add(fn);
+    return () => this.off(event, fn);
+  }
+
+  once(event, fn) {
+    const wrap = (...args) => {
+      this.off(event, wrap);
+      fn(...args);
+    };
+    return this.on(event, wrap);
+  }
+
+  off(event, fn) {
+    this.#events.get(event)?.delete(fn);
+  }
+
+  emit(event, ...args) {
+    this.#events.get(event)?.forEach((fn) => fn(...args));
+  }
+}
+```
+
+---
 
 ### 6. 手写并发控制 asyncPool
 
-限制同时执行的 Promise 数量（100 请求最多 5 并发）。
+限制同时最多 `limit` 个 Promise 执行，全部完成后返回结果数组。
+
+```js
+async function asyncPool(limit, tasks, iteratorFn) {
+  const ret = [];
+  const executing = new Set();
+
+  for (const task of tasks) {
+    const p = Promise.resolve().then(() => iteratorFn(task));
+    ret.push(p);
+
+    const e = p.finally(() => executing.delete(e));
+    executing.add(e);
+
+    if (executing.size >= limit) {
+      await Promise.race(executing);
+    }
+  }
+  return Promise.all(ret);
+}
+
+// 用法：asyncPool(5, urls, (url) => fetch(url))
+```
+
+---
 
 ### 7. 手写数组 flat
 
-递归 reduce 或指定 depth 的 flat。
+```js
+function flat(arr, depth = 1) {
+  if (depth <= 0) return arr.slice();
+  return arr.reduce((acc, item) => {
+    acc.push(...(Array.isArray(item) ? flat(item, depth - 1) : [item]));
+    return acc;
+  }, []);
+}
+```
+
+**复杂度：** O(n)，n 为展开后元素总数。
+
+---
 
 ### 8. 手写 JSONP
 
-动态 script 标签 + 全局回调 + 清理。
+```js
+function jsonp(url, params = {}, callbackName = 'jsonp_cb') {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const id = `${callbackName}_${Date.now()}`;
+    params[callbackName] = id;
+    window[id] = (data) => {
+      resolve(data);
+      cleanup();
+    };
+    script.onerror = () => { reject(new Error('JSONP error')); cleanup(); };
+    const qs = new URLSearchParams(params).toString();
+    script.src = `${url}?${qs}`;
+    document.body.appendChild(script);
+
+    function cleanup() {
+      delete window[id];
+      script.remove();
+    }
+  });
+}
+```
+
+**局限：** 仅 GET、安全性差，现代项目用 CORS + fetch。
+
+---
 
 ### 9. 手写 LRU 缓存
 
-Map 保序（get 时 delete 再 set 到末尾），超容量删首项。
+```js
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.map = new Map(); // Map 按插入顺序迭代
+  }
+  get(key) {
+    if (!this.map.has(key)) return -1;
+    const val = this.map.get(key);
+    this.map.delete(key);
+    this.map.set(key, val); // 移到末尾（最近使用）
+    return val;
+  }
+  put(key, value) {
+    if (this.map.has(key)) this.map.delete(key);
+    this.map.set(key, value);
+    if (this.map.size > this.capacity) {
+      const firstKey = this.map.keys().next().value;
+      this.map.delete(firstKey);
+    }
+  }
+}
+```
+
+**get/put 均 O(1)**（Map + 双向链表是经典实现，Map 简化版面试够用）。
+
+---
 
 ### 10. 手写柯里化 add(1)(2)(3)
 
-累积参数，最后一起计算。
+```js
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn.apply(this, args);
+    }
+    return (...next) => curried(...args, ...next);
+  };
+}
+
+const add = curry((a, b, c) => a + b + c);
+add(1)(2)(3); // 6
+```
+
+**无限参数版（如 add(1)(2)()）：** 用函数 toString 或显式 `.valueOf()` 触发最终求值。
+
+---
 
 ### 11. 手写发布订阅 vs 观察者
 
-发布订阅有事件中心解耦；观察者 subject 直接通知 observer。
+**观察者（紧耦合）：**
+
+```js
+class Subject {
+  observers = [];
+  attach(o) { this.observers.push(o); }
+  notify(data) { this.observers.forEach(o => o.update(data)); }
+}
+```
+
+**发布订阅（事件中心解耦）：** 见上文 EventEmitter；发布者不知道订阅者是谁，通过中心转发。
+
+---
 
 ### 12. 手写简单 diff（了解）
 
-同层比较 + key 匹配；真实框架更复杂。
+同层比较两个 VNode 数组，用 key 建立旧节点 map，遍历新列表决定 patch / mount / unmount：
+
+```js
+function simpleDiff(oldChildren, newChildren) {
+  const keyMap = new Map();
+  oldChildren.forEach((node, i) => keyMap.set(node.key, { node, i }));
+
+  const patches = [];
+  newChildren.forEach((newNode, newIndex) => {
+    const old = keyMap.get(newNode.key);
+    if (!old) {
+      patches.push({ type: 'INSERT', node: newNode, index: newIndex });
+    } else if (newNode.type !== old.node.type) {
+      patches.push({ type: 'REPLACE', index: newIndex, node: newNode });
+    } else {
+      patches.push({ type: 'PATCH', oldIndex: old.i, newNode });
+    }
+  });
+  // 删除：旧列表中有但新列表无的 key
+  return patches;
+}
+```
+
+真实 React/Vue diff 还有双端指针、最长递增子序列等优化。
 
 ---
 
