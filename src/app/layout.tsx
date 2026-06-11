@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_SC, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 import { ConditionalFooter } from "@/components/conditional-footer";
 import { CursorParticles } from "@/components/cursor-particles";
 import { SiteHeader } from "@/components/site-header";
@@ -72,6 +73,7 @@ export default function RootLayout({
           <ConditionalFooter />
         </div>
         <XiaozhiChatWidget />
+        <Analytics />
       </body>
     </html>
   );
