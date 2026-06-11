@@ -6,6 +6,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { extractHeadingsFromMarkdown } from "@/lib/heading-slug";
 import type { LocalizedPostData } from "@/lib/posts";
 
 type ArticleContentPanelProps = {
@@ -37,21 +38,6 @@ function getCacheKey(slug: string, locale: Locale) {
   return `post-translation:${slug}:${locale}`;
 }
 
-function extractHeadings(content: string) {
-  return content
-    .split("\n")
-    .filter((line) => line.startsWith("## "))
-    .map((line) => {
-      const text = line.replace(/^##\s+/, "").trim();
-      const id = text
-        .toLowerCase()
-        .replace(/[^\u4e00-\u9fa5\w\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-");
-      return { text, id };
-    });
-}
-
 export function ArticleContentPanel({ locale, post, messages }: ArticleContentPanelProps) {
   const [title, setTitle] = useState(post.localizedTitle);
   const [summary, setSummary] = useState(post.localizedSummary);
@@ -62,7 +48,7 @@ export function ArticleContentPanel({ locale, post, messages }: ArticleContentPa
 
   const canTranslate = locale !== DEFAULT_LOCALE;
   const shouldHighlightTranslate = canTranslate && !isTranslated && !isTranslating;
-  const headings = useMemo(() => extractHeadings(content), [content]);
+  const headings = useMemo(() => extractHeadingsFromMarkdown(content), [content]);
   const cacheKey = useMemo(() => getCacheKey(post.slug, locale), [post.slug, locale]);
 
   useEffect(() => {
