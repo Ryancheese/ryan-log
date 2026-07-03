@@ -48,6 +48,13 @@ type Messages = {
   xiaozhiVoiceHint: string;
   xiaozhiProxyHint: string;
   xiaozhiTimeoutHint: string;
+  bgmPlay: string;
+  bgmPause: string;
+  bgmMute: string;
+  bgmUnmute: string;
+  bgmOpen: string;
+  bgmCollapse: string;
+  bgmDefaultTitle: string;
 };
 
 const messagesMap: Record<Locale, Messages> = {
@@ -99,6 +106,13 @@ const messagesMap: Record<Locale, Messages> = {
     xiaozhiVoiceHint: "本次用文字回复；若需语音请确认已运行 npm run xiaozhi:proxy",
     xiaozhiProxyHint: "连不上语音服务，请先运行 npm run xiaozhi:proxy",
     xiaozhiTimeoutHint: "回复超时了，再试一次或关掉语音",
+    bgmPlay: "播放背景音乐",
+    bgmPause: "暂停背景音乐",
+    bgmMute: "静音",
+    bgmUnmute: "取消静音",
+    bgmOpen: "打开背景音乐控制",
+    bgmCollapse: "收起控制面板",
+    bgmDefaultTitle: "背景音乐",
   },
   en: {
     navHome: "Home",
@@ -149,6 +163,13 @@ const messagesMap: Record<Locale, Messages> = {
     xiaozhiVoiceHint: "Text reply only; run npm run xiaozhi:proxy for voice",
     xiaozhiProxyHint: "Voice service unavailable; run npm run xiaozhi:proxy",
     xiaozhiTimeoutHint: "Timed out—try again or turn voice off",
+    bgmPlay: "Play background music",
+    bgmPause: "Pause background music",
+    bgmMute: "Mute",
+    bgmUnmute: "Unmute",
+    bgmOpen: "Open music controls",
+    bgmCollapse: "Collapse panel",
+    bgmDefaultTitle: "Background music",
   },
   ja: {
     navHome: "ホーム",
@@ -199,6 +220,13 @@ const messagesMap: Record<Locale, Messages> = {
     xiaozhiVoiceHint: "テキストで返信しました",
     xiaozhiProxyHint: "音声サービスに接続できません",
     xiaozhiTimeoutHint: "タイムアウトしました",
+    bgmPlay: "BGMを再生",
+    bgmPause: "BGMを一時停止",
+    bgmMute: "ミュート",
+    bgmUnmute: "ミュート解除",
+    bgmOpen: "BGMコントロールを開く",
+    bgmCollapse: "パネルを閉じる",
+    bgmDefaultTitle: "BGM",
   },
 };
 

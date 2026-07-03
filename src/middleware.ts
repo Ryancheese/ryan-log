@@ -17,8 +17,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${DEFAULT_LOCALE}${CANONICAL_SLUG}`, request.url), 308);
   }
 
+  if (pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
+
   // public 下的静态资源（如 /avatar.jpg）不能走语言重定向，否则 next/image 优化器会拿到 HTML，报 received null
-  if (/\.(?:ico|png|jpg|jpeg|gif|webp|svg|avif|woff2?|ttf|eot)$/i.test(pathname)) {
+  if (/\.(?:ico|png|jpg|jpeg|gif|webp|svg|avif|woff2?|ttf|eot|mp3|ogg|wav|webm|m4a|aac)$/i.test(pathname)) {
     return NextResponse.next();
   }
 

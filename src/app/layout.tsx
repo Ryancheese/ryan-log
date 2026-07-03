@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_SC, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
+import { BackgroundMusicPlayer } from "@/components/background-music-player";
 import { ConditionalFooter } from "@/components/conditional-footer";
 import { CursorParticles } from "@/components/cursor-particles";
 import { SiteHeader } from "@/components/site-header";
@@ -72,6 +73,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
         </div>
+        <BackgroundMusicPlayer />
         <XiaozhiChatWidget />
         <Analytics />
       </body>
