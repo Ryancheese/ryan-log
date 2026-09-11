@@ -13,7 +13,7 @@ type BackgroundMusicConfig = {
   loop: boolean;
 };
 
-const STORAGE_KEY = "bgm-user-muted";
+const MUTE_KEY = "bgm-user-muted";
 
 export function BackgroundMusicPlayer() {
   const pathname = usePathname();
@@ -22,10 +22,12 @@ export function BackgroundMusicPlayer() {
   const messages = getMessages(locale);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [config, setConfig] = useState<BackgroundMusicConfig | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const prefsReady = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,82 +57,113 @@ export function BackgroundMusicPlayer() {
     if (typeof window === "undefined") {
       return;
     }
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "false") {
-      setMuted(false);
-    }
+    const stored = window.localStorage.getItem(MUTE_KEY);
+    setMuted(stored !== "false");
+    prefsReady.current = true;
   }, []);
 
-  useEffect(() => {
+  const syncAndPlay = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio || !config?.url) {
-      return;
+    if (!audio || !config?.url || !config.enabled) {
+      return false;
     }
-
     audio.volume = config.volume;
     audio.loop = config.loop;
     audio.muted = muted;
-
-    if (!muted && config.enabled) {
-      void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    } else {
-      audio.pause();
+    try {
+      await audio.play();
+      setPlaying(true);
+      return true;
+    } catch {
       setPlaying(false);
+      return false;
     }
   }, [config, muted]);
+
+  useEffect(() => {
+    if (!prefsReady.current || !config?.enabled || !config.url) {
+      return;
+    }
+
+    let cancelled = false;
+    const onGesture = () => {
+      if (!cancelled) {
+        void syncAndPlay();
+      }
+    };
+
+    void syncAndPlay().then((ok) => {
+      if (cancelled || ok) {
+        return;
+      }
+      document.addEventListener("pointerdown", onGesture, { once: true });
+      document.addEventListener("keydown", onGesture, { once: true });
+    });
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("pointerdown", onGesture);
+      document.removeEventListener("keydown", onGesture);
+    };
+  }, [config, muted, syncAndPlay]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.muted = muted;
+    if (config?.volume != null) {
+      audio.volume = config.volume;
+    }
+  }, [muted, config?.volume]);
+
+  // Click outside -> collapse to circle
+  useEffect(() => {
+    if (!expanded) {
+      return;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [expanded]);
 
   const togglePlay = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio || !config?.url) {
       return;
     }
-
-    if (muted) {
-      setMuted(false);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(STORAGE_KEY, "false");
-      }
-      try {
-        await audio.play();
-        setPlaying(true);
-      } catch {
-        setPlaying(false);
-      }
-      return;
-    }
-
     if (playing) {
       audio.pause();
       setPlaying(false);
       return;
     }
-
-    try {
-      await audio.play();
-      setPlaying(true);
-    } catch {
-      setPlaying(false);
-    }
-  }, [config?.url, muted, playing]);
+    await syncAndPlay();
+  }, [config?.url, playing, syncAndPlay]);
 
   const toggleMute = useCallback(() => {
     const next = !muted;
     setMuted(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, String(next));
+    window.localStorage.setItem(MUTE_KEY, String(next));
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = next;
     }
-    if (next) {
-      audioRef.current?.pause();
-      setPlaying(false);
+    if (!next) {
+      void syncAndPlay();
     }
-  }, [muted]);
+  }, [muted, syncAndPlay]);
 
   if (!config?.enabled || !config.url) {
     return null;
   }
 
   return (
-    <div className="bgm-player-root">
+    <div ref={rootRef} className="bgm-player-root">
       {expanded ? (
         <div className="bgm-player-panel">
           <p className="bgm-player-title">{config.title || messages.bgmDefaultTitle}</p>
@@ -140,6 +173,7 @@ export function BackgroundMusicPlayer() {
               className="bgm-player-btn"
               onClick={() => void togglePlay()}
               aria-label={playing ? messages.bgmPause : messages.bgmPlay}
+              title={playing ? messages.bgmPause : messages.bgmPlay}
             >
               {playing ? "⏸" : "▶"}
             </button>
@@ -148,29 +182,22 @@ export function BackgroundMusicPlayer() {
               className={`bgm-player-btn ${muted ? "is-muted" : ""}`}
               onClick={toggleMute}
               aria-label={muted ? messages.bgmUnmute : messages.bgmMute}
+              title={muted ? messages.bgmUnmute : messages.bgmMute}
             >
               {muted ? "🔇" : "🔊"}
-            </button>
-            <button
-              type="button"
-              className="bgm-player-btn"
-              onClick={() => setExpanded(false)}
-              aria-label={messages.bgmCollapse}
-            >
-              ›
             </button>
           </div>
         </div>
       ) : (
         <button
           type="button"
-          className={`bgm-player-fab ${playing ? "is-playing" : ""}`}
+          className={`bgm-player-fab ${playing ? "is-playing" : ""} ${muted ? "is-muted" : ""}`}
           onClick={() => setExpanded(true)}
           aria-label={messages.bgmOpen}
+          title={messages.bgmOpen}
         >
-          <span className="bgm-player-fab-glow" aria-hidden />
           <span className="bgm-player-fab-icon" aria-hidden>
-            ♪
+            {muted ? "🔇" : "♪"}
           </span>
         </button>
       )}
@@ -178,8 +205,9 @@ export function BackgroundMusicPlayer() {
       <audio
         ref={audioRef}
         src={config.url}
-        preload="metadata"
+        preload="auto"
         playsInline
+        muted={muted}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
       />

@@ -278,7 +278,6 @@ export function XiaozhiChatWidget() {
         onClick={handleToggleOpen}
         aria-label={open ? messages.xiaozhiClose : messages.xiaozhiOpen}
       >
-        <span className="xiaozhi-chat-fab-glow" aria-hidden />
         <span className="xiaozhi-chat-fab-core">{open ? "×" : "楠"}</span>
       </button>
     </div>
